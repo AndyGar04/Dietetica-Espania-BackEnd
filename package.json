@@ -4,15 +4,16 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "build": "npx tsc --watch",
+        "build": "tsc",
+        "dev": "tsx --watch src/index.ts",
         "dev:js": "node --watch ./dist/index.js",
         "dev:ts": "ts-node-dev --respawn src/index.ts",
-        "init:db": "ts-node src/scripts/initAdmin.ts",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:ui": "vitest --ui",
         "test:unit": "vitest run --exclude \"**/sqlite*.test.ts\"",
-        "test:integration": "vitest run \"**/sqlite*.test.ts\""
+        "test:integration": "vitest run \"**/sqlite*.test.ts\"",
+        "seed": "tsx src/db/seed.ts"
     },
     "keywords": [],
     "author": "",
@@ -32,6 +33,7 @@
         "supertest": "^7.1.4",
         "ts-jest": "^29.4.5",
         "ts-node-dev": "^2.0.0",
+        "tsx": "^4.21.0",
         "typescript": "^5.9.2",
         "vitest": "^4.0.18"
     },

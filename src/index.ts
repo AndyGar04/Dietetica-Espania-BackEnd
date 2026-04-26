@@ -1,19 +1,23 @@
 import 'dotenv/config';
-import Server from ".";
-// import { initializeAdmin } from "./scripts/initAdmin";
-const server = new Server(3000);
-const app = server.app;
+import app from './app';
+import { initSchema } from './db/schema';
 
-async function main() {
-    try {
-        await server.initDatabase();
-        //await initializeAdmin();
-        console.log("Base de datos lista y usuarios creados");
-    } catch (error) {
-        console.error("Error al iniciar DB:", error);
-    }
+const PORT = Number(process.env['PORT'] ?? 3000);
+
+async function main(): Promise<void> {
+  await initSchema();
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 }
 
-main();
+main().catch((err) => {
+  console.error('Startup error:', err);
+  process.exit(1);
+});
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'okis', timestamp: new Date() });
+});
 
 export default app;
