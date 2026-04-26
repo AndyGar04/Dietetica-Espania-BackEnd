@@ -1,0 +1,50 @@
+{
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "npx tsc --watch",
+        "dev:js": "node --watch ./dist/index.js",
+        "dev:ts": "ts-node-dev --respawn src/index.ts",
+        "init:db": "ts-node src/scripts/initAdmin.ts",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:ui": "vitest --ui",
+        "test:unit": "vitest run --exclude \"**/sqlite*.test.ts\"",
+        "test:integration": "vitest run \"**/sqlite*.test.ts\""
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "devDependencies": {
+        "@faker-js/faker": "^9.9.0",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.3",
+        "@types/jest": "^30.0.0",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/node": "^24.5.1",
+        "@types/supertest": "^6.0.3",
+        "@vitest/ui": "^4.0.18",
+        "jest": "^30.2.0",
+        "supertest": "^7.1.4",
+        "ts-jest": "^29.4.5",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.9.2",
+        "vitest": "^4.0.18"
+    },
+    "dependencies": {
+        "@libsql/client": "^0.17.0",
+        "bcryptjs": "^3.0.3",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.3",
+        "express": "^5.1.0",
+        "jsonwebtoken": "^9.0.2",
+        "morgan": "^1.10.1",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^6.0.1",
+        "zod": "^4.1.13"
+    }
+}
