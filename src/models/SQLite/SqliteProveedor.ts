@@ -23,12 +23,11 @@ export class SqliteProveedorRepository implements IProveedorRepository {
     }
 
     public async save(p: Proveedor): Promise<void> {
-        const stmt = this.db.prepare(
-            "INSERT INTO proveedores (id, mail, nroTelefono) VALUES (?, ?, ?)"
-        );
-
-        stmt.run(p.getId(), p.getMail(), p.getNroTelefono());
-    }
+    const stmt = this.db.prepare(
+        "INSERT OR IGNORE INTO proveedores (id, mail, nroTelefono) VALUES (?, ?, ?)"
+    );
+    stmt.run(p.getId(), p.getMail(), p.getNroTelefono());
+}
 
     public async findById(id: string): Promise<Proveedor | null> {
         const stmt = this.db.prepare("SELECT * FROM proveedores WHERE id = ?");
