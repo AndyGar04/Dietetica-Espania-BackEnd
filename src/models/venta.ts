@@ -1,47 +1,31 @@
+import { ItemVenta } from "./producto-venta";
+
 export class Venta {
+    private items: ItemVenta[] = [];
+
     constructor(
-        protected id: string,
-        protected montoTotal: number,
-        protected diaVenta: Date,
-        protected productosVenta: Producto [] = []
-    ){}
+        private id: string,
+        private fecha: Date = new Date()
+    ) {}
 
-    // Getters y Setters ID
-    public getId(): string{
-        return this.id 
+    public agregarItem(item: ItemVenta): void {
+        this.items.push(item);
     }
 
-    public setId(id: string): void {
-        this.id = id
+    public getTotalVenta(): number {
+        return this.items.reduce((total, item) => total + item.getSubtotal(), 0);
     }
 
-    // Getters y Setters MontoTotal
-    public getMontoTotal(): number{
-        return this.montoTotal
-    }
-
-    public setMontoTotal(montoTotal: number): void {
-        this.montoTotal = montoTotal 
+    // Getters y Setters
+    public getId(): string { 
+        return this.id; 
     }
     
-    //Getters y Setters DiaVenta
-    public getDiaVenta(): Date {
-        return this.diaVenta;
-    }   
-
-    public setDiaVenta(diaVenta: Date): void {
-        this.diaVenta = diaVenta;
+    public getFecha(): Date { 
+        return this.fecha; 
     }
 
-    //Getters y setters Productos
-    public getProductos(): Producto[]{
-        return this.productosVenta
-    }
-    
-    public setCanchas(productosVenta: Producto[]): void {
-        if (!Array.isArray(productosVenta)) {
-            throw new Error("productosVenta debe ser un arreglo válido");
-        }
-        this.productosVenta = productosVenta;
+    public getItems(): ItemVenta[] { 
+        return [...this.items];
     }
 }
