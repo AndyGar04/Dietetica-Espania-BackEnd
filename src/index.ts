@@ -8,6 +8,7 @@ import { ProductoService } from "./services/productoService";
 import { VentaService } from "./services/ventaService";
 import { ProveedorService } from "./services/proveedorService";
 import { Proveedor } from './models/proveedor';
+import { ProductoController } from './controllers/producto.controller';
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 
@@ -27,36 +28,13 @@ async function main(): Promise<void> {
   const serviceProd = new ProductoService(repoProd, repoProv);
   const serviceVenta = new VentaService(repoVenta, repoProd);
 
+  const productoController = new ProductoController(serviceProd);
 
-  console.log("Arrancando el sistema de la Dietética");
+  app.post("/productos/suelto", productoController.crearSuelto);
+  app.post("/productos/envasado", productoController.crearEnvasado);
+  app.get("/productos", productoController.listar);
+  app.patch("/productos/:id/oferta", productoController.actualizarOferta);
 
-    try {
-        console.log("\n1. Registrando proveedor...");
-        await serviceProv.registrarProveedor("P-001", "contacto@mayorista-bahia.com", "2914001122");
-
-        console.log("2. Cargando productos...");
-        await serviceProd.crearProductoSuelto("S-101", "P-001", "Ajo en Polvo", 0.85);
-        await serviceProd.crearProductoEnvasado("E-202", "P-001", "Fideos Integrales 500g", 1250.00);
-
-        console.log("3. Procesando una venta mixta...");
-        const itemsParaVender = [
-            { productoId: "S-101", cantidad: 150 },
-            { productoId: "E-202", cantidad: 2 }
-        ];
-
-        const ventaRealizada = await serviceVenta.procesarVenta("V-777", itemsParaVender);
-
-        console.log("\n VENTA EXITOSA ");
-        console.log(`ID Venta: ${ventaRealizada.getId()}`);
-        console.log(`Fecha: ${ventaRealizada.getFecha().toLocaleString()}`);
-        console.log(`Total a cobrar: $${ventaRealizada.getTotalVenta()}`);
-
-        const resumen = await serviceVenta.obtenerResumenVenta("V-777");
-        console.log(`Resumen oficial: ${resumen}`);
-
-    } catch (error) {
-        console.error("\n❌ Error en la prueba:", error instanceof Error ? error.message : error);
-    }
 }
 
 main().catch((err) => {
