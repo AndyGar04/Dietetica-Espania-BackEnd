@@ -9,6 +9,8 @@ import { VentaService } from "./services/ventaService";
 import { ProveedorService } from "./services/proveedorService";
 import { Proveedor } from './models/proveedor';
 import { ProductoController } from './controllers/producto.controller';
+import { ProveedorController } from './controllers/proveedor.controller';
+import { VentaController } from './controllers/venta.controller';
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 
@@ -35,7 +37,17 @@ async function main(): Promise<void> {
   app.get("/productos", productoController.listar);
   app.patch("/productos/:id/oferta", productoController.actualizarOferta);
 
+  const proveedorController = new ProveedorController(serviceProv);
+
+  app.post("/proveedores/", proveedorController.registrar);
+  app.get("/proveedores/", proveedorController.listarTodos);
+  app.get("/proveedores/:id", proveedorController.obtenerPorId);
+  app.put("/productos/:id", proveedorController.actualizar);
+
+  const ventaController = new VentaController(serviceVenta);
   
+  app.post('/ventas', ventaController.registrarVenta);
+  app.get('/ventas/:id/resumen', ventaController.obtenerResumen);
 }
 
 main().catch((err) => {
