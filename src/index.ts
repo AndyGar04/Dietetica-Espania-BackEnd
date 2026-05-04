@@ -35,6 +35,7 @@ async function main(): Promise<void> {
   app.get("/productos", productoController.listar);
   app.patch("/productos/:id/oferta", productoController.actualizarOferta);
 
+  
 }
 
 main().catch((err) => {
