@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes';
+import productoRoutes from './routes/producto.routes'; // <-- NUEVA IMPORTACIÓN
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(
   }),
 );
 
+// RUTAS
 app.use('/auth', authRoutes);
+app.use('/productos', productoRoutes); // <-- CONEXIÓN DE RUTAS DE PRODUCTOS
 
 export default app;

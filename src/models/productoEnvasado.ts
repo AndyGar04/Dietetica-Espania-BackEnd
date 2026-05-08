@@ -2,26 +2,50 @@ import { Producto } from "./producto";
 import { Proveedor } from "./proveedor";
 
 export class ProductoEnvasado extends Producto {
+
     constructor(
         id: string,
         proveedor: Proveedor,
         nombre: string,
         oferta: boolean,
-        private precioUnitario: number
+        public precioUnitario: number,
+        cantidad: number
     ) {
-        super(id, proveedor, nombre, oferta);
+
+        super(
+            id,
+            proveedor,
+            nombre,
+            oferta,
+            cantidad
+        );
     }
 
-    public override calcularPrecio(unidades: number): number {
+    // =========================
+    // CALCULAR PRECIO
+    // =========================
+    public override calcularPrecio(
+        unidades: number
+    ): number {
+
         return unidades * this.precioUnitario;
     }
 
-    // Getters y Setters
-    public getPrecioUnitario(): number { 
-        return this.precioUnitario; 
+    // =========================
+    // GETTER
+    // =========================
+    public getPrecioUnitario(): number {
+
+        return this.precioUnitario;
     }
 
-    public setPrecioUnitario(precio: number): void { 
-        this.precioUnitario = precio; 
+    // =========================
+    // SETTER
+    // =========================
+    public setPrecioUnitario(
+        precio: number
+    ): void {
+
+        this.precioUnitario = precio;
     }
 }

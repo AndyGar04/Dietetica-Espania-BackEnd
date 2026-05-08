@@ -1,46 +1,57 @@
 import { Proveedor } from "./proveedor";
 
 export abstract class Producto {
+
     constructor(
-        protected id: string,
-        protected proveedor: Proveedor,
-        protected nombre: string,
-        protected oferta: boolean
+        public id: string,
+        public proveedor: Proveedor,
+        public nombre: string,
+        public oferta: boolean,
+        public cantidad: number
     ) {}
 
-    // Despues creo modelos que faltan
-    public abstract calcularPrecio(cantidad: number): number;
+    // =========================
+    // ABSTRACT
+    // =========================
+    public abstract calcularPrecio(
+        cantidad: number
+    ): number;
 
-    // Getters y Setters 
-    public getId(): string { 
-        return this.id; 
-    }
+    // =========================
+    // GETTERS
+    // =========================
+    public getId(): string {
 
-    public setId(id: string): void { 
-        this.id = id; 
+        return this.id;
     }
 
     public getProveedor(): Proveedor {
+
         return this.proveedor;
     }
-    
-    public setProveedor(proveedor: Proveedor): void {
-        this.proveedor = proveedor;
+
+    public getNombre(): string {
+
+        return this.nombre;
     }
 
-    public getNombre(): string { 
-        return this.nombre; 
+    public isOferta(): boolean {
+
+        return this.oferta;
     }
 
-    public setNombre(nombre: string): void { 
-        this.nombre = nombre; 
+    public getCantidad(): number {
+
+        return this.cantidad;
     }
 
-    public isOferta(): boolean { 
-        return this.oferta; 
-    }
+    // =========================
+    // SETTERS
+    // =========================
+    public setCantidad(
+        cantidad: number
+    ): void {
 
-    public setOferta(oferta: boolean): void { 
-        this.oferta = oferta; 
+        this.cantidad = cantidad;
     }
 }
