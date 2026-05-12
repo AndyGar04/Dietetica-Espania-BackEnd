@@ -1,147 +1,341 @@
 import { IProductoRepository } from "../models/repository/IProductoRepository";
+
 import { IProveedorRepository } from "../models/repository/IProveedorRepository";
+
 import { ProductoSuelto } from "../models/productoSuelto";
+
 import { ProductoEnvasado } from "../models/productoEnvasado";
+
 import { Producto } from "../models/producto";
-import { Proveedor } from "../models/proveedor"; // Importación vital para evitar el error de getId()
+
+import { Proveedor } from "../models/proveedor";
 
 export class ProductoService {
+
     constructor(
+
         private productoRepo: IProductoRepository,
+
         private proveedorRepo: IProveedorRepository
+
     ) {}
 
-  
+    /* =====================================
+        ACTUALIZAR PRODUCTO
+    ===================================== */
+
     public async actualizarProducto(
-        id: string, 
-        data: { nombre: string; precio: number; cantidad: number; oferta?: boolean; proveedorId: string; }
+
+        id: string,
+
+        data: {
+
+            nombre: string;
+
+            precio?: number;
+
+            precioCompra?: number;
+
+            precioVenta?: number;
+
+            cantidad: number;
+
+            categoria?: string;
+
+            proveedor?: string;
+
+            oferta?: boolean;
+
+            proveedorId: string;
+        }
+
     ): Promise<void> {
-        const producto = await this.productoRepo.findById(id);
+
+        const producto: any =
+            await this.productoRepo.findById(id);
 
         if (!producto) {
-            throw new Error(`Producto con ID ${id} no encontrado`);
+
+            throw new Error(
+                `Producto con ID ${id} no encontrado`
+            );
         }
 
-        // Actualización de propiedades comunes (Setters o Directo)
-        if (data.nombre) {
-            if (typeof (producto as any).setNombre === 'function') (producto as any).setNombre(data.nombre);
-            else (producto as any).nombre = data.nombre;
+        producto.nombre =
+            data.nombre;
+
+        producto.oferta =
+            data.oferta || false;
+
+        producto.cantidad =
+            data.cantidad || 0;
+
+        producto.proveedorId =
+            data.proveedorId || "1";
+
+        producto.precioCompra =
+            data.precioCompra || 0;
+
+        producto.precioVenta =
+            data.precioVenta || 0;
+
+        producto.categoria =
+            data.categoria || "";
+
+        producto.proveedorNombre =
+            data.proveedor || "";
+
+        if (
+            producto instanceof ProductoEnvasado
+        ) {
+
+            producto.precioUnitario =
+                data.precioVenta || 0;
         }
 
-        if (data.oferta !== undefined) {
-            if (typeof (producto as any).setOferta === 'function') (producto as any).setOferta(data.oferta);
-            else (producto as any).oferta = data.oferta;
-        }
+       if (
+    producto instanceof ProductoSuelto
+) {
 
-        // Lógica para detectar tipo de producto sin fallar por 'instanceof'
-        if ('precioUnitario' in producto || (producto as any).precioUnitario !== undefined) {
-            // Es Envasado
-            if (typeof (producto as any).setPrecioUnitario === 'function') {
-                (producto as any).setPrecioUnitario(data.precio);
-            } else {
-                (producto as any).precioUnitario = data.precio;
-            }
+    producto.setPrecioPorGramo(
+        data.precioVenta || 0
+    );
+}
 
-            if (typeof (producto as any).setCantidad === 'function') {
-                (producto as any).setCantidad(data.cantidad);
-            } else {
-                (producto as any).cantidad = data.cantidad;
-            }
-        } else {
-            // Es Suelto
-            if (typeof (producto as any).setPrecioPorGramo === 'function') {
-                (producto as any).setPrecioPorGramo(data.precio);
-            } else {
-                (producto as any).precioPorGramo = data.precio;
-            }
-        }
-
-        await this.productoRepo.update(producto);
+        await this.productoRepo.update(
+            producto
+        );
     }
 
+    /* =====================================
+        CREAR ENVASADO
+    ===================================== */
 
     public async crearProductoEnvasado(
+
         id: string,
+
         proveedorId: string,
+
         nombre: string,
-        precioUnitario: number,
+
+        precioVenta: number,
+
         cantidad: number,
-        oferta: boolean = false
+
+        oferta: boolean = false,
+
+        precioCompra: number = 0,
+
+        categoria: string = "",
+
+        proveedorNombre: string = ""
+
     ): Promise<void> {
-        let proveedor = await this.proveedorRepo.findById(proveedorId);
+
+        let proveedor =
+            await this.proveedorRepo.findById(
+                proveedorId
+            );
 
         if (!proveedor) {
-            console.log(`Proveedor ${proveedorId} no existe. Creando instancia real...`);
-   
-            const nuevoProv = new Proveedor(proveedorId, "Proveedor General", ""); 
-            await (this.proveedorRepo as any).save(nuevoProv);
+
+            const nuevoProv =
+                new Proveedor(
+
+                    proveedorId,
+
+                    "Proveedor General",
+
+                    ""
+                );
+
+            await (this.proveedorRepo as any)
+                .save(nuevoProv);
+
             proveedor = nuevoProv;
         }
 
-        const nuevoEnvasado = new ProductoEnvasado(
-            id || Date.now().toString(),
-            proveedor!,
-            nombre,
-            oferta,
-            precioUnitario,
-            cantidad
-        );
+        const nuevoEnvasado: any =
+            new ProductoEnvasado(
 
-        await this.productoRepo.save(nuevoEnvasado);
+                id || Date.now().toString(),
+
+                proveedor,
+
+                nombre,
+
+                oferta,
+
+                precioVenta,
+
+                cantidad
+            );
+
+        nuevoEnvasado.precioCompra =
+            precioCompra || 0;
+
+        nuevoEnvasado.precioVenta =
+            precioVenta || 0;
+
+        nuevoEnvasado.categoria =
+            categoria || "";
+
+        nuevoEnvasado.proveedorNombre =
+            proveedorNombre || "";
+
+        nuevoEnvasado.proveedorId =
+            proveedorId || "1";
+
+        await this.productoRepo.save(
+            nuevoEnvasado
+        );
     }
 
+    /* =====================================
+        CREAR SUELTO
+    ===================================== */
 
     public async crearProductoSuelto(
+
         id: string,
+
         proveedorId: string,
+
         nombre: string,
-        precioPorGramo: number,
+
+        precioVenta: number,
+
         oferta: boolean = false,
-        cantidad: number 
+
+        cantidad: number,
+
+        precioCompra: number = 0,
+
+        categoria: string = "",
+
+        proveedorNombre: string = ""
+
     ): Promise<void> {
-        let proveedor = await this.proveedorRepo.findById(proveedorId);
+
+        let proveedor =
+            await this.proveedorRepo.findById(
+                proveedorId
+            );
 
         if (!proveedor) {
-            const nuevoProv = new Proveedor(proveedorId, "Proveedor General", "");
-            await (this.proveedorRepo as any).save(nuevoProv);
+
+            const nuevoProv =
+                new Proveedor(
+
+                    proveedorId,
+
+                    "Proveedor General",
+
+                    ""
+                );
+
+            await (this.proveedorRepo as any)
+                .save(nuevoProv);
+
             proveedor = nuevoProv;
         }
 
-        const nuevoSuelto = new ProductoSuelto(
-            id || Date.now().toString(),
-            proveedor!,
-            nombre,
-            oferta,
-            precioPorGramo
-        );
+        const nuevoSuelto: any =
+            new ProductoSuelto(
 
-        if (typeof (nuevoSuelto as any).setCantidad === 'function') {
-            (nuevoSuelto as any).setCantidad(cantidad);
+                id || Date.now().toString(),
+
+                proveedor,
+
+                nombre,
+
+                oferta,
+
+                precioVenta
+            );
+
+        nuevoSuelto.cantidad =
+            cantidad || 0;
+
+        nuevoSuelto.precioCompra =
+            precioCompra || 0;
+
+        nuevoSuelto.precioVenta =
+            precioVenta || 0;
+
+        nuevoSuelto.categoria =
+            categoria || "";
+
+        nuevoSuelto.proveedorNombre =
+            proveedorNombre || "";
+
+        nuevoSuelto.proveedorId =
+            proveedorId || "1";
+
+        await this.productoRepo.save(
+            nuevoSuelto
+        );
+    }
+
+    /* =====================================
+        LISTAR
+    ===================================== */
+
+    public async listarCatalogo():
+        Promise<Producto[]> {
+
+        return await this.productoRepo
+            .findAll();
+    }
+
+    /* =====================================
+        ELIMINAR
+    ===================================== */
+
+    public async eliminarProducto(
+        id: string
+    ): Promise<void> {
+
+        const producto =
+            await this.productoRepo.findById(id);
+
+        if (!producto) {
+
+            throw new Error(
+                "Producto no encontrado"
+            );
         }
 
-        await this.productoRepo.save(nuevoSuelto);
-    }
-
-
-    public async listarCatalogo(): Promise<Producto[]> {
-        return await this.productoRepo.findAll();
-    }
-
-    public async eliminarProducto(id: string): Promise<void> {
-        const producto = await this.productoRepo.findById(id);
-        if (!producto) throw new Error("Producto no encontrado");
         await this.productoRepo.delete(id);
     }
 
-    public async cambiarEstadoOferta(id: string, estado: boolean): Promise<void> {
-        const producto = await this.productoRepo.findById(id);
-        if (!producto) throw new Error("No se encontró el producto");
+    /* =====================================
+        OFERTA
+    ===================================== */
 
-        if (typeof (producto as any).setOferta === 'function') {
-            (producto as any).setOferta(estado);
-        } else {
-            (producto as any).oferta = estado; 
+    public async cambiarEstadoOferta(
+
+        id: string,
+
+        estado: boolean
+
+    ): Promise<void> {
+
+        const producto: any =
+            await this.productoRepo.findById(id);
+
+        if (!producto) {
+
+            throw new Error(
+                "No se encontró el producto"
+            );
         }
-        await this.productoRepo.update(producto);
+
+        producto.oferta = estado;
+
+        await this.productoRepo.update(
+            producto
+        );
     }
 }

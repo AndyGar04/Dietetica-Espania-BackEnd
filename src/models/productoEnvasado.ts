@@ -21,9 +21,7 @@ export class ProductoEnvasado extends Producto {
         );
     }
 
-    // =========================
-    // CALCULAR PRECIO
-    // =========================
+
     public override calcularPrecio(
         unidades: number
     ): number {
@@ -31,17 +29,12 @@ export class ProductoEnvasado extends Producto {
         return unidades * this.precioUnitario;
     }
 
-    // =========================
-    // GETTER
-    // =========================
     public getPrecioUnitario(): number {
 
         return this.precioUnitario;
     }
 
-    // =========================
-    // SETTER
-    // =========================
+
     public setPrecioUnitario(
         precio: number
     ): void {

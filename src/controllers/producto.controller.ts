@@ -7,9 +7,10 @@ export class ProductoController {
     private productoService: ProductoService
   ) {}
 
-  // =========================
-  // CREAR ENVASADO
-  // =========================
+  /* =====================================
+      CREAR PRODUCTO ENVASADO
+  ===================================== */
+
   public crearEnvasado = async (
     req: Request,
     res: Response
@@ -20,24 +21,35 @@ export class ProductoController {
       const {
         id,
         proveedorId,
+
         nombre,
-        precioUnitario,
+
+        precioCompra,
+        precioVenta,
+
+        categoria,
+        proveedor,
+
         cantidad,
         oferta,
       } = req.body;
 
       await this.productoService.crearProductoEnvasado(
         id,
-        proveedorId,
+        proveedorId || "1",
+
         nombre,
-        Number(precioUnitario),
+
+        Number(precioVenta),
+
         Number(cantidad),
+
         oferta ?? false
       );
 
       return res.status(201).json({
         message:
-          "Producto envasado creado correctamente",
+          "Producto creado correctamente",
       });
 
     } catch (error: any) {
@@ -45,14 +57,16 @@ export class ProductoController {
       console.error(error);
 
       return res.status(500).json({
-        error: error.message,
+        error:
+          error.message,
       });
     }
   };
 
-  // =========================
-  // CREAR SUELTO
-  // =========================
+  /* =====================================
+      CREAR PRODUCTO SUELTO
+  ===================================== */
+
   public crearSuelto = async (
     req: Request,
     res: Response
@@ -63,18 +77,29 @@ export class ProductoController {
       const {
         id,
         proveedorId,
+
         nombre,
-        precioPorGramo,
+
+        precioCompra,
+        precioVenta,
+
+        categoria,
+        proveedor,
+
         cantidad,
         oferta,
       } = req.body;
 
       await this.productoService.crearProductoSuelto(
         id,
-        proveedorId,
+        proveedorId || "1",
+
         nombre,
-        Number(precioPorGramo),
+
+        Number(precioVenta),
+
         oferta ?? false,
+
         Number(cantidad)
       );
 
@@ -88,14 +113,16 @@ export class ProductoController {
       console.error(error);
 
       return res.status(500).json({
-        error: error.message,
+        error:
+          error.message,
       });
     }
   };
 
-  // =========================
-  // LISTAR PRODUCTOS
-  // =========================
+  /* =====================================
+      LISTAR PRODUCTOS
+  ===================================== */
+
   public listar = async (
     _req: Request,
     res: Response
@@ -104,91 +131,130 @@ export class ProductoController {
     try {
 
       const productos =
-        await this.productoService.listarCatalogo();
+        await this.productoService
+          .listarCatalogo();
 
-      const resultado = productos.map((p: any) => {
+      const resultado =
+        productos.map((p: any) => {
 
-        const esEnvasado =
-          typeof p.getPrecioUnitario === "function";
+          const esEnvasado =
+            typeof p.getPrecioUnitario ===
+            "function";
 
-        return {
+          return {
 
-          // =========================
-          // DATOS BASE
-          // =========================
-          id: p.getId(),
+            id:
+              typeof p.getId === "function"
+                ? p.getId()
+                : p.id,
 
-          nombre: p.getNombre(),
+            nombre:
+              typeof p.getNombre === "function"
+                ? p.getNombre()
+                : p.nombre,
 
-          cantidad:
-            typeof p.getCantidad === "function"
-              ? Number(p.getCantidad())
-              : 0,
+            cantidad:
+              typeof p.getCantidad === "function"
+                ? Number(
+                    p.getCantidad()
+                  )
+                : Number(
+                    p.cantidad || 0
+                  ),
 
-          oferta:
-            typeof p.isOferta === "function"
-              ? p.isOferta()
-              : false,
+            oferta:
+              typeof p.isOferta === "function"
+                ? p.isOferta()
+                : Boolean(
+                    p.oferta
+                  ),
 
-          proveedor:
-            typeof p.getProveedor === "function"
-              ? {
-                  id:
-                    p.getProveedor()?.getId?.() ||
-                    null,
-                }
-              : null,
-
-          // =========================
-          // PRECIOS
-          // =========================
-          precioUnitario: esEnvasado
-            ? Number(
-                p.getPrecioUnitario?.() || 0
-              )
-            : null,
-
-          precioPorGramo:
-            !esEnvasado &&
-            typeof p.getPrecioPorGramo ===
+            proveedorId:
+              typeof p.getProveedor ===
               "function"
-              ? Number(
-                  p.getPrecioPorGramo?.() || 0
-                )
-              : null,
+                ? (
+                    p.getProveedor()?.getId?.()
+                  ) || "1"
+                : p.proveedorId || "1",
 
-          // =========================
-          // COMPATIBILIDAD FRONTEND
-          // =========================
-          precio: esEnvasado
-            ? Number(
-                p.getPrecioUnitario?.() || 0
-              )
-            : Number(
-                p.getPrecioPorGramo?.() || 0
+            proveedor:
+              p.proveedorNombre ||
+              p.proveedor ||
+              "",
+
+            categoria:
+              p.categoria || "",
+
+            precioCompra:
+              Number(
+                p.precioCompra || 0
               ),
 
-          tipo: esEnvasado
-            ? "Envasado"
-            : "Suelto",
-        };
-      });
+            precioVenta:
+              esEnvasado
+                ? Number(
+                    p.getPrecioUnitario?.() ||
+                    p.precioVenta ||
+                    0
+                  )
+                : Number(
+                    p.getPrecioPorGramo?.() ||
+                    p.precioVenta ||
+                    0
+                  ),
 
-      return res.json(resultado);
+            precio:
+              esEnvasado
+                ? Number(
+                    p.getPrecioUnitario?.() ||
+                    0
+                  )
+                : Number(
+                    p.getPrecioPorGramo?.() ||
+                    0
+                  ),
+
+            ganancia:
+              Number(
+                (
+                  (
+                    p.precioVenta ||
+                    p.getPrecioUnitario?.() ||
+                    0
+                  ) -
+                  (
+                    p.precioCompra ||
+                    0
+                  )
+                )
+              ),
+
+            tipo:
+              esEnvasado
+                ? "Envasado"
+                : "Suelto",
+          };
+        });
+
+      return res.json(
+        resultado
+      );
 
     } catch (error: any) {
 
       console.error(error);
 
       return res.status(500).json({
-        error: error.message,
+        error:
+          error.message,
       });
     }
   };
 
-  // =========================
-  // ACTUALIZAR PRODUCTO
-  // =========================
+  /* =====================================
+      ACTUALIZAR PRODUCTO
+  ===================================== */
+
   public actualizar = async (
     req: Request,
     res: Response
@@ -196,16 +262,29 @@ export class ProductoController {
 
     try {
 
-      const id = Array.isArray(req.params.id)
-        ? req.params.id[0]
-        : req.params.id;
+      const id =
+        Array.isArray(
+          req.params.id
+        )
+          ? req.params.id[0]
+          : req.params.id;
 
       const {
+
         nombre,
-        precio,
+
+        precioCompra,
+        precioVenta,
+
         cantidad,
+
+        categoria,
+        proveedor,
+
         oferta,
-        proveedorId
+
+        proveedorId,
+
       } = req.body;
 
       if (!id) {
@@ -216,16 +295,41 @@ export class ProductoController {
         });
       }
 
-      await this.productoService.actualizarProducto(
-        id,
-        {
-          nombre,
-          precio: Number(precio),
-          cantidad: Number(cantidad),
-          oferta,
-          proveedorId
-        }
-      );
+      await this.productoService
+        .actualizarProducto(
+          id,
+          {
+            id,
+
+            nombre,
+
+            precioCompra:
+              Number(
+                precioCompra
+              ),
+
+            precioVenta:
+              Number(
+                precioVenta
+              ),
+
+            cantidad:
+              Number(
+                cantidad
+              ),
+
+            categoria:
+              categoria || "",
+
+            proveedor:
+              proveedor || "",
+
+            oferta,
+
+            proveedorId:
+              proveedorId || "1",
+          }
+        );
 
       return res.json({
         message:
@@ -240,14 +344,16 @@ export class ProductoController {
       );
 
       return res.status(500).json({
-        error: error.message,
+        error:
+          error.message,
       });
     }
   };
 
-  // =========================
-  // ACTUALIZAR OFERTA
-  // =========================
+  /* =====================================
+      ACTUALIZAR OFERTA
+  ===================================== */
+
   public actualizarOferta = async (
     req: Request,
     res: Response
@@ -255,16 +361,21 @@ export class ProductoController {
 
     try {
 
-      const id = Array.isArray(req.params.id)
-        ? req.params.id[0]
-        : req.params.id;
+      const id =
+        Array.isArray(
+          req.params.id
+        )
+          ? req.params.id[0]
+          : req.params.id;
 
-      const { estado } = req.body;
+      const { estado } =
+        req.body;
 
       if (!id) {
 
         return res.status(400).json({
-          error: "ID inválido",
+          error:
+            "ID inválido",
         });
       }
 
@@ -284,14 +395,16 @@ export class ProductoController {
       console.error(error);
 
       return res.status(500).json({
-        error: error.message,
+        error:
+          error.message,
       });
     }
   };
 
-  // =========================
-  // ELIMINAR PRODUCTO
-  // =========================
+  /* =====================================
+      ELIMINAR
+  ===================================== */
+
   public eliminar = async (
     req: Request,
     res: Response
@@ -299,19 +412,25 @@ export class ProductoController {
 
     try {
 
-      const id = Array.isArray(req.params.id)
-        ? req.params.id[0]
-        : req.params.id;
+      const id =
+        Array.isArray(
+          req.params.id
+        )
+          ? req.params.id[0]
+          : req.params.id;
 
       if (!id) {
 
         return res.status(400).json({
-          error: "ID inválido",
+          error:
+            "ID inválido",
         });
       }
 
       await this.productoService
-        .eliminarProducto(id);
+        .eliminarProducto(
+          id
+        );
 
       return res.json({
         message:
@@ -323,7 +442,8 @@ export class ProductoController {
       console.error(error);
 
       return res.status(500).json({
-        error: error.message,
+        error:
+          error.message,
       });
     }
   };

@@ -10,16 +10,12 @@ export abstract class Producto {
         public cantidad: number
     ) {}
 
-    // =========================
-    // ABSTRACT
-    // =========================
+  
     public abstract calcularPrecio(
         cantidad: number
     ): number;
 
-    // =========================
-    // GETTERS
-    // =========================
+
     public getId(): string {
 
         return this.id;
@@ -45,9 +41,7 @@ export abstract class Producto {
         return this.cantidad;
     }
 
-    // =========================
-    // SETTERS
-    // =========================
+
     public setCantidad(
         cantidad: number
     ): void {
