@@ -1,13 +1,8 @@
 import { IProductoRepository } from "../models/repository/IProductoRepository";
-
 import { IProveedorRepository } from "../models/repository/IProveedorRepository";
-
 import { ProductoSuelto } from "../models/productoSuelto";
-
 import { ProductoEnvasado } from "../models/productoEnvasado";
-
 import { Producto } from "../models/producto";
-
 import { Proveedor } from "../models/proveedor";
 
 export class ProductoService {
@@ -243,15 +238,11 @@ export class ProductoService {
 
         const nuevoSuelto: any =
             new ProductoSuelto(
-
                 id || Date.now().toString(),
-
                 proveedor,
-
                 nombre,
-
                 oferta,
-
+                cantidad || 0,
                 precioVenta
             );
 

@@ -1,7 +1,6 @@
 import { Proveedor } from "./proveedor";
 
 export abstract class Producto {
-
     constructor(
         public id: string,
         public proveedor: Proveedor,
@@ -10,42 +9,29 @@ export abstract class Producto {
         public cantidad: number
     ) {}
 
-  
-    public abstract calcularPrecio(
-        cantidad: number
-    ): number;
-
+    public abstract calcularPrecio(cantidad: number): number;
 
     public getId(): string {
-
         return this.id;
     }
 
     public getProveedor(): Proveedor {
-
         return this.proveedor;
     }
 
     public getNombre(): string {
-
         return this.nombre;
     }
 
     public isOferta(): boolean {
-
         return this.oferta;
     }
 
     public getCantidad(): number {
-
         return this.cantidad;
     }
 
-
-    public setCantidad(
-        cantidad: number
-    ): void {
-
+    public setCantidad(cantidad: number): void {
         this.cantidad = cantidad;
     }
 }

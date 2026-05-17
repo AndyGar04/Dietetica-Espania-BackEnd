@@ -198,15 +198,11 @@ export class SqliteProductoRepository
     if (row.tipo === "SUELTO") {
 
       producto = new ProductoSuelto(
-
         row.id,
-
         proveedor,
-
         row.nombre,
-
         row.oferta === 1,
-
+        row.cantidad || 0,
         row.precioPorGramo
       );
 

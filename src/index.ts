@@ -29,12 +29,6 @@ async function main(): Promise<void> {
   
 const serviceProv = new ProveedorService(repoProv);
 
-// await serviceProv.registrarProveedor(
-//   "1",
-//   "proveedor@test.com",
-//   "2910000000"
-// );
-
 console.log("Proveedor creado");
 
 const serviceProd = new ProductoService(repoProd, repoProv);
@@ -75,14 +69,12 @@ const serviceProd = new ProductoService(repoProd, repoProv);
   app.get("/ventas/:id/resumen", ventaController.obtenerResumen);
 
 
-
   app.get('/health', (_req, res) => {
     res.json({
       status: 'ok',
       timestamp: new Date(),
     });
   });
-
 
 
   app.listen(PORT, () => {

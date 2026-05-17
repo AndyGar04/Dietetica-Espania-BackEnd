@@ -4,7 +4,7 @@ import { ProductoService } from '../services/productoService';
 import { SqliteProductoRepository } from '../models/SQLite/SqliteProducto';
 import { SqliteProveedorRepository } from '../models/SQLite/SqliteProveedor';
 
-const router = Router();
+const router: Router = Router();
 
 
 const dbPath = './dietetica.db'; 

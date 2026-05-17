@@ -1,9 +1,9 @@
-import express from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes';
-import productoRoutes from './routes/producto.routes'; // <-- NUEVA IMPORTACIÓN
+import productoRoutes from './routes/producto.routes';
 
-const app = express();
+const app: Application = express();
 
 app.use(express.json());
 app.use(
@@ -16,6 +16,6 @@ app.use(
 
 // RUTAS
 app.use('/auth', authRoutes);
-app.use('/productos', productoRoutes); // <-- CONEXIÓN DE RUTAS DE PRODUCTOS
+app.use('/productos', productoRoutes);
 
 export default app;
