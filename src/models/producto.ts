@@ -1,6 +1,10 @@
 import { Proveedor } from "./proveedor";
+import { Categoria } from "./categoria";
 
 export abstract class Producto {
+
+    public categoria: Categoria | null = null;
+
     constructor(
         public id: string,
         public proveedor: Proveedor,
@@ -33,5 +37,13 @@ export abstract class Producto {
 
     public setCantidad(cantidad: number): void {
         this.cantidad = cantidad;
+    }
+    
+    public getCategoria(): Categoria | null {
+        return this.categoria;
+    }
+
+    public setCategoria(categoria: Categoria | null): void {
+        this.categoria = categoria;
     }
 }

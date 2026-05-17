@@ -11,34 +11,24 @@ export class ProductoEnvasado extends Producto {
         public precioUnitario: number,
         cantidad: number
     ) {
-
         super(
-            id,
-            proveedor,
-            nombre,
-            oferta,
-            cantidad
+            id, proveedor, nombre, oferta, cantidad
         );
     }
-
 
     public override calcularPrecio(
         unidades: number
     ): number {
-
         return unidades * this.precioUnitario;
     }
 
     public getPrecioUnitario(): number {
-
         return this.precioUnitario;
     }
-
 
     public setPrecioUnitario(
         precio: number
     ): void {
-
         this.precioUnitario = precio;
     }
 }
