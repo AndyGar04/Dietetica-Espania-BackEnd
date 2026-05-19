@@ -1,40 +1,58 @@
 import { Proveedor } from "../models/proveedor";
-import { IProveedorRepository } from "../models/repository/IProveedorRepository";
 
 export class ProveedorService {
-    constructor(private repo: IProveedorRepository) {}
+    constructor(private repoProv: any) {}
 
-    public async registrarProveedor(id: string, mail: string, tel: string): Promise<void> {
-        if (!mail.includes("@")) {
-            throw new Error("El formato del mail es inválido.");
+    public async registrarProveedor(id: string, nombre: string, mail: string, nroTelefono: string): Promise<void> {
+        if (!nombre || nombre.trim() === "") {
+            throw new Error("El nombre del proveedor es obligatorio.");
         }
 
-        const existe = await this.repo.findById(id);
-        if (existe) {
-            throw new Error("Ya existe un proveedor con ese ID.");
+        const idFinal = id && id.trim() !== "" ? id : Date.now().toString();
+        const mailLimpio = mail ? mail.trim() : "";
+        const telLimpio = nroTelefono ? nroTelefono.trim() : "";
+
+        if (mailLimpio.length > 0) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(mailLimpio)) {
+                throw new Error("El formato del mail es inválido.");
+            }
         }
 
-        const nuevoProveedor = new Proveedor(id, mail, tel);
-        await this.repo.save(nuevoProveedor);
-        
-        console.log(`Proveedor ${id} registrado con éxito.`);
+        const nuevo = new Proveedor(idFinal, nombre.trim(), mailLimpio, telLimpio);
+        await this.repoProv.save(nuevo);
+    }
+
+    public async actualizarProveedor(id: string, nombre: string, mail: string, nroTelefono: string): Promise<void> {
+        if (!id) throw new Error("ID requerido.");
+        if (!nombre || nombre.trim() === "") {
+            throw new Error("El nombre del proveedor es obligatorio.");
+        }
+
+        const mailLimpio = mail ? mail.trim() : "";
+        const telLimpio = nroTelefono ? nroTelefono.trim() : "";
+
+        if (mailLimpio.length > 0) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(mailLimpio)) {
+                throw new Error("El formato del mail es inválido.");
+            }
+        }
+
+        const editado = new Proveedor(id, nombre.trim(), mailLimpio, telLimpio);
+        await this.repoProv.update(editado);
     }
 
     public async listarTodos(): Promise<Proveedor[]> {
-        return await this.repo.findAll();
+        return await this.repoProv.findAll();
     }
 
     public async obtenerPorId(id: string): Promise<Proveedor | null> {
-        return await this.repo.findById(id);
+        return await this.repoProv.findById(id);
     }
 
-    public async actualizarContacto(id: string, nuevoMail: string, nuevoTel: string): Promise<void> {
-        const proveedor = await this.repo.findById(id);
-        if (!proveedor) throw new Error("Proveedor no encontrado.");
-
-        proveedor.setMail(nuevoMail);
-        proveedor.setNroTelefono(nuevoTel);
-
-        await this.repo.update(proveedor);
+    public async eliminarProveedor(id: string): Promise<void> {
+        if (!id) throw new Error("ID requerido.");
+        await this.repoProv.delete(id);
     }
 }

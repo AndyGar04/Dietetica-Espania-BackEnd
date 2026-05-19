@@ -4,87 +4,71 @@ import { ProductoService } from "../services/productoService";
 export class ProductoController {
   constructor(private productoService: ProductoService) {}
 
-  public crearEnvasado = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+  public registrarEnvasado = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id, proveedorId, nombre, precioCompra, precioVenta, categoria, proveedor, cantidad, oferta} = req.body;
+      const { id, nombre, precioCompra, precioVenta, precioUnitario, cantidad, categoria, categoriaId, proveedorId, oferta } = req.body;
+
+      const precioFinal = Number(precioVenta || precioUnitario || 0);
+      const catId = String(categoriaId || categoria || "");
+
+      if (!nombre || precioFinal <= 0 || !proveedorId || !catId) {
+        return res.status(400).json({ error: "Faltan campos obligatorios para el producto envasado." });
+      }
 
       await this.productoService.crearProductoEnvasado(
-        id,
-        proveedorId || "1",
-        nombre,
-        Number(precioVenta),
-        Number(cantidad),
-        oferta ?? false,
+        id || crypto.randomUUID(),
+        String(proveedorId),
+        nombre.trim(),
+        precioFinal,
+        Number(cantidad || 0),
+        Boolean(oferta),
         Number(precioCompra || 0),
-        categoria || "",
-        proveedor || "" 
+        catId,
+        ""
       );
 
-      return res.status(201).json({
-        message: "Producto creado correctamente",
-      });
+      return res.status(201).json({ message: "Producto envasado creado con éxito" });
     } catch (error: any) {
-      console.error(error);
+      console.error("Error en registrarEnvasado:", error);
       return res.status(500).json({ error: error.message });
     }
   };
 
-  public crearSuelto = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+  public registrarSuelto = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const {id, proveedorId, nombre, precioCompra, precioVenta, categoria, proveedor, cantidad, oferta,} = req.body;
+      const { id, nombre, precioCompra, precioVenta, precioPorGramo, cantidad, categoria, categoriaId, proveedorId, oferta } = req.body;
+
+      const precioFinal = Number(precioVenta || precioPorGramo || 0);
+      const catId = String(categoriaId || categoria || "");
+
+      if (!nombre || precioFinal <= 0 || !proveedorId || !catId) {
+        return res.status(400).json({ error: "Faltan campos obligatorios para el producto suelto." });
+      }
 
       await this.productoService.crearProductoSuelto(
-        id,
-        proveedorId || "1",
-        nombre,
-        Number(precioVenta),
-        oferta ?? false,
-        Number(cantidad),
+        id || crypto.randomUUID(),
+        String(proveedorId),
+        nombre.trim(),
+        precioFinal,
+        Boolean(oferta),
+        Number(cantidad || 0),
         Number(precioCompra || 0),
-        categoria || "",
-        proveedor || ""
+        catId,
+        ""
       );
 
-      return res.status(201).json({
-        message: "Producto suelto creado correctamente",
-      });
+      return res.status(201).json({ message: "Producto suelto creado con éxito" });
     } catch (error: any) {
-      console.error(error);
+      console.error("Error en registrarSuelto:", error);
       return res.status(500).json({ error: error.message });
     }
   };
 
-  public listar = async (_req: Request, res: Response): Promise<Response> => {
+  public listarTodos = async (_req: Request, res: Response): Promise<Response> => {
     try {
       const productos = await this.productoService.listarCatalogo();
-      
-      const resultado = productos.map((p: any) => {
-        const esEnvasado = typeof p.getPrecioUnitario === "function";
-        return {
-          id: typeof p.getId === "function" ? p.getId() : p.id,
-          nombre: typeof p.getNombre === "function" ? p.getNombre() : p.nombre,
-          cantidad: typeof p.getCantidad === "function" ? Number(p.getCantidad()) : Number(p.cantidad || 0),
-          oferta: typeof p.isOferta === "function" ? p.isOferta() : Boolean(p.oferta),
-          proveedorId: typeof p.getProveedor === "function" ? p.getProveedor()?.getId?.() || "1" : p.proveedorId || "1",
-          proveedor: p.proveedorNombre || p.proveedor || "",
-          categoria: p.categoria || "",
-          precioCompra: Number(p.precioCompra || 0),
-          precioVenta: esEnvasado ? Number(p.getPrecioUnitario?.() || p.precioVenta || 0) : Number(p.getPrecioPorGramo?.() || p.precioVenta || 0),
-          precio: esEnvasado ? Number(p.getPrecioUnitario?.() || 0) : Number(p.getPrecioPorGramo?.() || 0),
-          ganancia: Number((p.precioVenta || p.getPrecioUnitario?.() || 0) - (p.precioCompra || 0)),
-          tipo: esEnvasado ? "Envasado" : "Suelto",
-        };
-      });
-
-      return res.json(resultado);
+      return res.json(productos);
     } catch (error: any) {
-      console.error(error);
       return res.status(500).json({ error: error.message });
     }
   };
@@ -92,68 +76,58 @@ export class ProductoController {
   public actualizar = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      const { nombre, precioCompra, precioVenta, cantidad, categoria, proveedor, oferta, proveedorId } = req.body;
-
-      if (!id) return res.status(400).json({ error: "ID de producto requerido" });
-
+      const { nombre, precioCompra, precioVenta, cantidad, categoria, categoriaId, proveedorId, oferta } = req.body;
+      
       if (!id || Array.isArray(id)) {
-        return res.status(400).json({
-          error: "ID de producto requerido o inválido",
-        });
+        return res.status(400).json({ error: "ID de producto requerido o inválido" });
       }
+
+      const catId = String(categoriaId || categoria || "");
 
       await this.productoService.actualizarProducto(id, {
-        nombre,
-        precioCompra: Number(precioCompra),
-        precioVenta: Number(precioVenta),
-        cantidad: Number(cantidad),
-        categoria: categoria || "",
-        proveedor: proveedor || "",
-        oferta,
-        proveedorId: proveedorId || "1",
+        nombre: nombre || "",
+        precioCompra: Number(precioCompra || 0),
+        precioVenta: Number(precioVenta || 0),
+        cantidad: Number(cantidad || 0),
+        proveedorId: String(proveedorId || ""),
+        categoria: String(categoriaId || ""),
+        oferta: Boolean(oferta)
       });
 
-      return res.json({ message: "Producto actualizado correctamente" });
+      return res.json({ message: "Producto actualizado con éxito" });
     } catch (error: any) {
-      console.error("Error al actualizar producto:", error);
-      return res.status(500).json({ error: error.message });
-    }
-  };
-
-  public actualizarOferta = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const { id } = req.params;
-      const { estado } = req.body;
-
-      if (!id || Array.isArray(id)) {
-        return res.status(400).json({
-          error: "ID de producto requerido o inválido",
-        });
-      }
-
-      await this.productoService.cambiarEstadoOferta(id, estado);
-      return res.json({ message: "Oferta actualizada" });
-    } catch (error: any) {
-      console.error(error);
-      return res.status(500).json({ error: error.message });
+      console.error("Error crítico al actualizar producto:", error);
+      return res.status(400).json({ error: error.message });
     }
   };
 
   public eliminar = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-
       if (!id || Array.isArray(id)) {
-        return res.status(400).json({
-          error: "ID de producto requerido o inválido",
-        });
+        return res.status(400).json({ error: "ID de producto requerido o inválido" });
       }
 
       await this.productoService.eliminarProducto(id);
-      return res.json({ message: "Producto eliminado correctamente" });
+      return res.json({ message: "Producto eliminado con éxito" });
     } catch (error: any) {
-      console.error(error);
       return res.status(500).json({ error: error.message });
+    }
+  };
+
+  public cambiarOferta = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { id } = req.params;
+      const { estado } = req.body;
+
+      if (!id || Array.isArray(id)) {
+        return res.status(400).json({ error: "ID de producto requerido o inválido" });
+      }
+
+      await this.productoService.cambiarEstadoOferta(id, Boolean(estado));
+      return res.json({ message: "Estado de oferta actualizado con éxito" });
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
     }
   };
 }

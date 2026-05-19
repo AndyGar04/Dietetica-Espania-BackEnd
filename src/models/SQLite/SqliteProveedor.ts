@@ -1,59 +1,71 @@
 import Database from "better-sqlite3";
 import { Proveedor } from "../proveedor";
-import { IProveedorRepository } from "../repository/IProveedorRepository";
 
-export class SqliteProveedorRepository implements IProveedorRepository {
-    private db: Database.Database;
+export class SqliteProveedorRepository {
+  private db: Database.Database;
 
-    constructor(dbPath: string) {
-        this.db = new Database(dbPath);
-        this.init();
-    }
+  constructor(dbPath: string) {
+    this.db = new Database(dbPath);
+    this.init();
+  }
 
-    // Crea la tabla
-    private init(): void {
-        const query = `
-            CREATE TABLE IF NOT EXISTS proveedores (
-                id TEXT PRIMARY KEY,
-                mail TEXT NOT NULL,
-                nroTelefono TEXT NOT NULL
-            );
-        `;
-        this.db.exec(query);
-    }
+  private init(): void {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS proveedores (
+        id TEXT PRIMARY KEY,
+        nombre TEXT NOT NULL DEFAULT '',
+        mail TEXT DEFAULT '',
+        nroTelefono TEXT DEFAULT ''
+      );
+    `);
 
-    public async save(p: Proveedor): Promise<void> {
-    const stmt = this.db.prepare(
-        "INSERT OR IGNORE INTO proveedores (id, mail, nroTelefono) VALUES (?, ?, ?)"
-    );
-    stmt.run(p.getId(), p.getMail(), p.getNroTelefono());
-}
+    const columnas = ["nombre TEXT DEFAULT ''", "mail TEXT DEFAULT ''", "nroTelefono TEXT DEFAULT ''"];
+    columnas.forEach((col) => {
+      try { this.db.exec(`ALTER TABLE proveedores ADD COLUMN ${col};`); } catch {}
+    });
+  }
 
-    public async findById(id: string): Promise<Proveedor | null> {
-        const stmt = this.db.prepare("SELECT * FROM proveedores WHERE id = ?");
-        const row: any = stmt.get(id);
+  public async save(p: any): Promise<void> {
+    const stmt = this.db.prepare(`
+      INSERT INTO proveedores (id, nombre, mail, nroTelefono)
+      VALUES (?, ?, ?, ?)
+    `);
 
-        if (!row) return null;
+    const id = typeof p.getId === "function" ? p.getId() : p.id;
+    const nombre = typeof p.getNombre === "function" ? p.getNombre() : (p.nombre || p.razonSocial || "");
+    const mail = typeof p.getMail === "function" ? p.getMail() : (p.mail || "");
+    const nroTelefono = typeof p.getNroTelefono === "function" ? p.getNroTelefono() : (p.nroTelefono || "");
 
-        return new Proveedor(row.id, row.mail, row.nroTelefono);
-    }
+    stmt.run(id, nombre, mail, nroTelefono);
+  }
 
-    public async findAll(): Promise<Proveedor[]> {
-        const stmt = this.db.prepare("SELECT * FROM proveedores");
-        const rows = stmt.all();
+  public async findById(id: string): Promise<Proveedor | null> {
+    const stmt = this.db.prepare(`SELECT * FROM proveedores WHERE id = ?`);
+    const row: any = stmt.get(id);
+    if (!row) return null;
+    return new Proveedor(row.id, row.nombre || row.razonSocial || "", row.mail || "", row.nroTelefono || "");
+  }
 
-        return rows.map((row: any) => new Proveedor(row.id, row.mail, row.nroTelefono));
-    }
+  public async findAll(): Promise<Proveedor[]> {
+    const stmt = this.db.prepare(`SELECT * FROM proveedores`);
+    const rows: any[] = stmt.all();
+    return rows.map(row => new Proveedor(row.id, row.nombre || row.razonSocial || "", row.mail || "", row.nroTelefono || ""));
+  }
 
-    public async update(p: Proveedor): Promise<void> {
-        const stmt = this.db.prepare(
-            "UPDATE proveedores SET mail = ?, nroTelefono = ? WHERE id = ?"
-        );
-        stmt.run(p.getMail(), p.getNroTelefono(), p.getId());
-    }
+  public async update(p: any): Promise<void> {
+    const stmt = this.db.prepare(`
+      UPDATE proveedores SET nombre = ?, mail = ?, nroTelefono = ? WHERE id = ?
+    `);
 
-    public async delete(id: string): Promise<void> {
-        const stmt = this.db.prepare("DELETE FROM proveedores WHERE id = ?");
-        stmt.run(id);
-    }
+    const id = typeof p.getId === "function" ? p.getId() : p.id;
+    const nombre = typeof p.getNombre === "function" ? p.getNombre() : (p.nombre || p.razonSocial || "");
+    const mail = typeof p.getMail === "function" ? p.getMail() : (p.mail || "");
+    const nroTelefono = typeof p.getNroTelefono === "function" ? p.getNroTelefono() : (p.nroTelefono || "");
+
+    stmt.run(nombre, mail, nroTelefono, id);
+  }
+
+  public async delete(id: string): Promise<void> {
+    this.db.prepare(`DELETE FROM proveedores WHERE id = ?`).run(id);
+  }
 }

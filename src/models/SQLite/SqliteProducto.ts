@@ -1,179 +1,139 @@
 import Database from "better-sqlite3";
-import { IProductoRepository } from "../repository/IProductoRepository";
 import { Producto } from "../producto";
 import { ProductoSuelto } from "../productoSuelto";
 import { ProductoEnvasado } from "../productoEnvasado";
-import { IProveedorRepository } from "../repository/IProveedorRepository";
-import { ICategoriaRepository } from "../repository/ICategoriaRepository";
+import { Proveedor } from "../proveedor";
+import { IProductoRepository } from "../repository/IProductoRepository";
 
 export class SqliteProductoRepository implements IProductoRepository {
   private db: Database.Database;
 
-  constructor(
-    dbPath: string,
-    private proveedorRepo: IProveedorRepository,
-    private categoriaRepo: ICategoriaRepository
-  ) {
+  constructor(dbPath: string) {
     this.db = new Database(dbPath);
     this.init();
   }
 
   private init(): void {
-    const query = `
+    this.db.exec(`
       CREATE TABLE IF NOT EXISTS productos (
         id TEXT PRIMARY KEY,
-        proveedorId TEXT NOT NULL,
-        nombre TEXT NOT NULL,
-        oferta INTEGER NOT NULL,
-        tipo TEXT NOT NULL,
-        precioPorGramo REAL,
-        precioUnitario REAL,
-        precioCompra REAL DEFAULT 0,
-        precioVenta REAL DEFAULT 0,
-        categoria TEXT DEFAULT '',
-        proveedorNombre TEXT DEFAULT '',
-        cantidad REAL DEFAULT 0,
-        activo INTEGER NOT NULL DEFAULT 1,
-        FOREIGN KEY (proveedorId) REFERENCES proveedores(id)
+        nombre TEXT NOT NULL
       );
-    `;
-    this.db.exec(query);
+    `);
 
-    const migraciones = [
-      `ALTER TABLE productos ADD COLUMN precioCompra REAL DEFAULT 0`,
-      `ALTER TABLE productos ADD COLUMN precioVenta REAL DEFAULT 0`,
-      `ALTER TABLE productos ADD COLUMN categoria TEXT DEFAULT ''`,
-      `ALTER TABLE productos ADD COLUMN proveedorNombre TEXT DEFAULT ''`
+    const columnas = [
+      "tipo TEXT DEFAULT 'envasado'",
+      "precioCompra REAL DEFAULT 0",
+      "precioVenta REAL DEFAULT 0",
+      "cantidad INTEGER DEFAULT 0",
+      "oferta INTEGER DEFAULT 0",
+      "categoria TEXT DEFAULT ''",
+      "proveedorId TEXT DEFAULT ''"
     ];
 
-    migraciones.forEach((sql) => {
-      try {
-        this.db.prepare(sql).run();
-      } catch {}
+    columnas.forEach((col) => {
+      try { this.db.exec(`ALTER TABLE productos ADD COLUMN ${col};`); } catch {}
     });
   }
 
-  public async save(p: Producto): Promise<void> {
+  public async save(p: any): Promise<void> {
     const stmt = this.db.prepare(`
-      INSERT INTO productos (
-        id, proveedorId, nombre, oferta, tipo,
-        precioPorGramo, precioUnitario, precioCompra, precioVenta,
-        categoria, proveedorNombre, cantidad, activo
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO productos (id, nombre, tipo, precioCompra, precioVenta, cantidad, oferta, categoria, proveedorId)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const tipo = p instanceof ProductoSuelto ? "SUELTO" : "ENVASADO";
-    
-    const categoriaId = p.categoria ? p.categoria.getId() : "";
+    const esSuelto = p instanceof ProductoSuelto || p.tipo === "suelto";
+    const tipoDato = esSuelto ? "suelto" : "envasado";
+
+    let precioFinal = 0;
+    if (esSuelto && typeof p.getPrecioPorGramo === "function") {
+      precioFinal = p.getPrecioPorGramo();
+    } else if (!esSuelto && typeof p.getPrecioUnitario === "function") {
+      precioFinal = p.getPrecioUnitario();
+    } else {
+      precioFinal = p.precioVenta || 0;
+    }
 
     stmt.run(
-      p.getId(),
-      p.getProveedor().getId(),
-      p.getNombre(),
-      p.isOferta() ? 1 : 0,
-      tipo,
-      p instanceof ProductoSuelto ? p.getPrecioPorGramo() : null,
-      p instanceof ProductoEnvasado ? p.getPrecioUnitario() : null,
-      (p as any).precioCompra || 0,
-      (p as any).precioVenta || 0,
-      categoriaId,
-      (p as any).proveedorNombre || "",
-      p.getCantidad(),
-      1
+      p.id || p.getId?.(),
+      p.nombre || p.getNombre?.(),
+      tipoDato,
+      p.precioCompra || 0,
+      precioFinal,
+      p.cantidad || p.getCantidad?.() || 0,
+      p.oferta ? 1 : 0,
+      p.categoria || p.categoriaId || "",
+      p.proveedorId || p.proveedor?.id || ""
     );
   }
 
-  public async findById(id: string): Promise<Producto | null> {
-    const stmt = this.db.prepare(`
-      SELECT * FROM productos WHERE id = ? AND activo = 1
-    `);
-    const row: any = stmt.get(id);
-    if (!row) return null;
-
-    const proveedor = await this.proveedorRepo.findById(row.proveedorId);
-    if (!proveedor) {
-      throw new Error("Proveedor no encontrado");
-    }
-
-    const categoriaObj = row.categoria ? await this.categoriaRepo.findById(row.categoria) : null;
-
-    let producto: Producto;
-
-    if (row.tipo === "SUELTO") {
-      producto = new ProductoSuelto(
-        row.id,
-        proveedor,
-        row.nombre,
-        row.oferta === 1,
-        row.cantidad || 0,
-        row.precioPorGramo
-      );
-    } else {
-      producto = new ProductoEnvasado(
-        row.id,
-        proveedor,
-        row.nombre,
-        row.oferta === 1,
-        row.precioUnitario,
-        row.cantidad || 0
-      );
-    }
-
-    producto.categoria = categoriaObj;
-
-    (producto as any).precioCompra = row.precioCompra || 0;
-    (producto as any).precioVenta = row.precioVenta || row.precioUnitario || 0;
-    (producto as any).proveedorNombre = row.proveedorNombre || "";
-    (producto as any).cantidad = row.cantidad || 0;
-    (producto as any).proveedorId = row.proveedorId || "1";
-
-    return producto;
-  }
-
-  public async findAll(): Promise<Producto[]> {
-    const stmt = this.db.prepare(`
-      SELECT id FROM productos WHERE activo = 1
-    `);
-    const rows: any[] = stmt.all();
-
-    const productos = await Promise.all(
-      rows.map((row) => this.findById(row.id))
-    );
-
-    return productos.filter((p): p is Producto => p !== null);
-  }
-
-  public async update(p: Producto): Promise<void> {
+  public async update(p: any): Promise<void> {
     const stmt = this.db.prepare(`
       UPDATE productos SET
-        proveedorId = ?, nombre = ?, oferta = ?,
-        precioPorGramo = ?, precioUnitario = ?,
-        precioCompra = ?, precioVenta = ?,
-        categoria = ?, proveedorNombre = ?, cantidad = ?
+        nombre = ?, tipo = ?, precioCompra = ?, precioVenta = ?, cantidad = ?, oferta = ?, categoria = ?, proveedorId = ?
       WHERE id = ?
     `);
 
-    const categoriaId = p.categoria ? p.categoria.getId() : "";
+    const esSuelto = p instanceof ProductoSuelto || p.tipo === "suelto";
+    const tipoDato = esSuelto ? "suelto" : "envasado";
+
+    let precioFinal = 0;
+    if (esSuelto && typeof p.getPrecioPorGramo === "function") {
+      precioFinal = p.getPrecioPorGramo();
+    } else if (!esSuelto && typeof p.getPrecioUnitario === "function") {
+      precioFinal = p.getPrecioUnitario();
+    } else {
+      precioFinal = p.precioVenta || 0;
+    }
 
     stmt.run(
-      (p as any).proveedorId || p.getProveedor().getId() || "1",
-      p.getNombre(),
-      p.isOferta() ? 1 : 0,
-      p instanceof ProductoSuelto ? p.getPrecioPorGramo() : null,
-      p instanceof ProductoEnvasado ? p.getPrecioUnitario() : (p as any).precioVenta,
-      (p as any).precioCompra || 0,
-      (p as any).precioVenta || 0,
-      categoriaId,
-      (p as any).proveedorNombre || "",
-      p.getCantidad() || 0,
-      p.getId()
+      p.nombre || p.getNombre?.(),
+      tipoDato,
+      p.precioCompra || 0,
+      precioFinal,
+      p.cantidad || p.getCantidad?.() || 0,
+      p.oferta ? 1 : 0,
+      p.categoria || p.categoriaId || "",
+      p.proveedorId || p.proveedor?.id || "",
+      p.id || p.getId?.()
     );
   }
 
+  public async findAll(): Promise<Producto[]> {
+    const stmt = this.db.prepare(`SELECT * FROM productos`);
+    const rows: any[] = stmt.all();
+
+    return rows.map(row => this.mapearInstancia(row));
+  }
+
+  public async findById(id: string): Promise<Producto | null> {
+    const stmt = this.db.prepare(`SELECT * FROM productos WHERE id = ?`);
+    const row: any = stmt.get(id);
+
+    if (!row) return null;
+    return this.mapearInstancia(row);
+  }
+
   public async delete(id: string): Promise<void> {
-    const stmt = this.db.prepare(`
-      UPDATE productos SET activo = 0 WHERE id = ?
-    `);
-    stmt.run(id);
+    this.db.prepare(`DELETE FROM productos WHERE id = ?`).run(id);
+  }
+
+  private mapearInstancia(row: any): Producto {
+    const provTemp = new Proveedor(row.proveedorId || "", "Proveedor Asociado", "", "");
+    let producto: any;
+
+    if (row.tipo === "suelto") {
+      producto = new ProductoSuelto(row.id, provTemp, row.nombre, Boolean(row.oferta), row.cantidad, row.precioVenta);
+    } else {
+      producto = new ProductoEnvasado(row.id, provTemp, row.nombre, Boolean(row.oferta), row.precioVenta, row.cantidad);
+    }
+
+    producto.precioCompra = row.precioCompra || 0;
+    producto.precioVenta = row.precioVenta || 0;
+    producto.categoria = row.categoria || "";
+    producto.proveedorId = row.proveedorId || "";
+    producto.tipo = row.tipo || "envasado";
+
+    return producto;
   }
 }
