@@ -25,7 +25,8 @@ import { crearProductoRouter } from './routes/producto.routes';
 import { crearProveedorRouter } from './routes/proveedor.routes';
 import { crearVentaRouter } from './routes/venta.routes';
 import { crearCategoriaRouter } from './routes/categoria.routes';
-import authRoutes from './routes/auth.routes'; 
+import authRoutes from './routes/auth.routes';
+import { authMiddleware } from './middlewares/auth.middleware';
 
 const PORT = Number(process.env['PORT'] ?? 3000); 
 
@@ -50,10 +51,10 @@ async function main(): Promise<void> {
   const categoriaController = new CategoriaController(serviceCat);
 
   app.use('/auth', authRoutes); 
-  app.use('/productos', crearProductoRouter(productoController));
-  app.use('/proveedores', crearProveedorRouter(proveedorController));
-  app.use('/ventas', crearVentaRouter(ventaController));
-  app.use('/categorias', crearCategoriaRouter(categoriaController));
+  app.use('/productos', authMiddleware, crearProductoRouter(productoController));
+  app.use('/proveedores', authMiddleware, crearProveedorRouter(proveedorController));
+  app.use('/ventas', authMiddleware, crearVentaRouter(ventaController));
+  app.use('/categorias', authMiddleware, crearCategoriaRouter(categoriaController));
 
   // Health check de rutina
   app.get('/health', (_req, res) => { 
