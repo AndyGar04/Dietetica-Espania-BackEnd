@@ -30,8 +30,16 @@ import { authMiddleware } from './middlewares/auth.middleware';
 
 const PORT = Number(process.env['PORT'] ?? 3000); 
 
-async function main(): Promise<void> { 
-  await initSchema(); 
+async function main(): Promise<void> {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret || jwtSecret.length < 32) {
+    throw new Error(
+      'JWT_SECRET no está definido o es demasiado corto (mínimo 32 caracteres). ' +
+      'Definilo en el archivo .env antes de arrancar el servidor.'
+    );
+  }
+
+  await initSchema();
 
   const DB_PATH = "./dietetica.db"; 
 
