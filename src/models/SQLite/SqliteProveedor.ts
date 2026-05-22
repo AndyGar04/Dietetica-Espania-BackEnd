@@ -1,71 +1,46 @@
-import Database from "better-sqlite3";
 import { Proveedor } from "../proveedor";
+import { IProveedorRepository } from "../repository/IProveedorRepository";
 
-export class SqliteProveedorRepository {
-  private db: Database.Database;
+export class SqliteProveedorRepository implements IProveedorRepository {
+  constructor(private db: import('@libsql/client').Client) {}
 
-  constructor(dbPath: string) {
-    this.db = new Database(dbPath);
-    this.init();
-  }
+  public async save(p: any): Promise<void> {
+    const id = typeof p.getId === "function" ? p.getId() : p.id;
+    const nombre = typeof p.getNombre === "function" ? p.getNombre() : (p.nombre || p.razonSocial || "");
+    const mail = typeof p.getMail === "function" ? p.getMail() : (p.mail || "");
+    const nroTelefono = typeof p.getNroTelefono === "function" ? p.getNroTelefono() : (p.nroTelefono || "");
 
-  private init(): void {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS proveedores (
-        id TEXT PRIMARY KEY,
-        nombre TEXT NOT NULL DEFAULT '',
-        mail TEXT DEFAULT '',
-        nroTelefono TEXT DEFAULT ''
-      );
-    `);
-
-    const columnas = ["nombre TEXT DEFAULT ''", "mail TEXT DEFAULT ''", "nroTelefono TEXT DEFAULT ''"];
-    columnas.forEach((col) => {
-      try { this.db.exec(`ALTER TABLE proveedores ADD COLUMN ${col};`); } catch {}
+    await this.db.execute({
+      sql: 'INSERT INTO proveedores (id, nombre, mail, nroTelefono) VALUES (?, ?, ?, ?)',
+      args: [id, nombre, mail, nroTelefono]
     });
   }
 
-  public async save(p: any): Promise<void> {
-    const stmt = this.db.prepare(`
-      INSERT INTO proveedores (id, nombre, mail, nroTelefono)
-      VALUES (?, ?, ?, ?)
-    `);
-
-    const id = typeof p.getId === "function" ? p.getId() : p.id;
-    const nombre = typeof p.getNombre === "function" ? p.getNombre() : (p.nombre || p.razonSocial || "");
-    const mail = typeof p.getMail === "function" ? p.getMail() : (p.mail || "");
-    const nroTelefono = typeof p.getNroTelefono === "function" ? p.getNroTelefono() : (p.nroTelefono || "");
-
-    stmt.run(id, nombre, mail, nroTelefono);
-  }
-
   public async findById(id: string): Promise<Proveedor | null> {
-    const stmt = this.db.prepare(`SELECT * FROM proveedores WHERE id = ?`);
-    const row: any = stmt.get(id);
+    const result = await this.db.execute({ sql: 'SELECT * FROM proveedores WHERE id = ?', args: [id] });
+    const row = result.rows[0];
     if (!row) return null;
-    return new Proveedor(row.id, row.nombre || row.razonSocial || "", row.mail || "", row.nroTelefono || "");
+    return new Proveedor(String(row['id']), String(row['nombre'] || ''), String(row['mail'] || ''), String(row['nroTelefono'] || ''));
   }
 
   public async findAll(): Promise<Proveedor[]> {
-    const stmt = this.db.prepare(`SELECT * FROM proveedores`);
-    const rows: any[] = stmt.all();
-    return rows.map(row => new Proveedor(row.id, row.nombre || row.razonSocial || "", row.mail || "", row.nroTelefono || ""));
+    const result = await this.db.execute({ sql: 'SELECT * FROM proveedores', args: [] });
+    return result.rows.map(row => new Proveedor(String(row['id']), String(row['nombre'] || ''), String(row['mail'] || ''), String(row['nroTelefono'] || '')));
   }
 
   public async update(p: any): Promise<void> {
-    const stmt = this.db.prepare(`
-      UPDATE proveedores SET nombre = ?, mail = ?, nroTelefono = ? WHERE id = ?
-    `);
-
     const id = typeof p.getId === "function" ? p.getId() : p.id;
     const nombre = typeof p.getNombre === "function" ? p.getNombre() : (p.nombre || p.razonSocial || "");
     const mail = typeof p.getMail === "function" ? p.getMail() : (p.mail || "");
     const nroTelefono = typeof p.getNroTelefono === "function" ? p.getNroTelefono() : (p.nroTelefono || "");
 
-    stmt.run(nombre, mail, nroTelefono, id);
+    await this.db.execute({
+      sql: 'UPDATE proveedores SET nombre = ?, mail = ?, nroTelefono = ? WHERE id = ?',
+      args: [nombre, mail, nroTelefono, id]
+    });
   }
 
   public async delete(id: string): Promise<void> {
-    this.db.prepare(`DELETE FROM proveedores WHERE id = ?`).run(id);
+    await this.db.execute({ sql: 'DELETE FROM proveedores WHERE id = ?', args: [id] });
   }
 }

@@ -1,5 +1,6 @@
 import 'dotenv/config'; //
 import app from './app'; //
+import db from './db/client';
 import { initSchema } from './db/schema'; //
 
 // Repositorios
@@ -41,12 +42,10 @@ async function main(): Promise<void> {
 
   await initSchema();
 
-  const DB_PATH = "./dietetica.db"; 
-
-  const repoProv = new SqliteProveedorRepository(DB_PATH); 
-  const repoCat = new SqliteCategoriaRepository(DB_PATH);
-  const repoProd = new SqliteProductoRepository(DB_PATH); 
-  const repoVenta = new SqliteVentaRepository(DB_PATH, repoProd); 
+  const repoProv = new SqliteProveedorRepository(db);
+  const repoCat = new SqliteCategoriaRepository(db);
+  const repoProd = new SqliteProductoRepository(db);
+  const repoVenta = new SqliteVentaRepository(db, repoProd);
 
   const serviceProv = new ProveedorService(repoProv); 
   const serviceCat = new CategoriaService(repoCat);
