@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 *.db
 .env
+.env.test
 
 test-results.txt
 test.db
