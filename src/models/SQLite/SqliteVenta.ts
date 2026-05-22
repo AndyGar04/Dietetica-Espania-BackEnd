@@ -13,8 +13,14 @@ export class SqliteVentaRepository implements IVentaRepository {
                 args: [venta.getId(), venta.getFecha().toISOString()]
             },
             ...venta.getItems().map(item => ({
-                sql: 'INSERT INTO venta_items (ventaId, productoId, cantidad) VALUES (?, ?, ?)',
-                args: [venta.getId(), item.getProducto().getId(), item.getCantidad()]
+                sql: 'INSERT INTO venta_items (ventaId, productoId, cantidad, precioUnitario, subtotal) VALUES (?, ?, ?, ?, ?)',
+                args: [
+                    venta.getId(),
+                    item.getProducto().getId(),
+                    item.getCantidad(),
+                    item.getPrecioUnitario(),
+                    item.getSubtotal()
+                ]
             }))
         ];
         await this.db.batch(statements, 'write');
@@ -31,7 +37,13 @@ export class SqliteVentaRepository implements IVentaRepository {
         for (const row of itemsResult.rows) {
             const producto = await this.productoRepo.findById(String(row['productoId']));
             if (producto) {
-                nuevaVenta.agregarItem(new ItemVenta(producto, Number(row['cantidad'])));
+                const item = ItemVenta.fromHistorico(
+                    producto,
+                    Number(row['cantidad']),
+                    Number(row['precioUnitario']),
+                    Number(row['subtotal'])
+                );
+                nuevaVenta.agregarItem(item);
             }
         }
 

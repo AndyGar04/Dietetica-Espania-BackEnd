@@ -44,6 +44,8 @@ export async function initSchema(): Promise<void> {
     ventaId TEXT NOT NULL,
     productoId TEXT NOT NULL,
     cantidad REAL NOT NULL,
+    precioUnitario REAL NOT NULL DEFAULT 0,
+    subtotal REAL NOT NULL DEFAULT 0,
     FOREIGN KEY (ventaId) REFERENCES ventas(id),
     FOREIGN KEY (productoId) REFERENCES productos(id)
   )`);
