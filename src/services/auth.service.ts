@@ -49,7 +49,7 @@ export async function loginUser(
   if (!secret) throw new AppError(500, 'Error de configuración del servidor');
 
   const payload: UserPayload = { id: user.id, email: user.email };
-  const expiresIn = (process.env['JWT_EXPIRES_IN'] ?? '7d') as StringValue;
+  const expiresIn = (process.env['JWT_EXPIRES_IN'] ?? '15d') as StringValue;
   const token = jwt.sign(payload, secret, { expiresIn });
 
   return {
