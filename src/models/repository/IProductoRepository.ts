@@ -6,4 +6,5 @@ export interface IProductoRepository {
     findAll(): Promise<Producto[]>;
     update(producto: Producto): Promise<void>;
     delete(id: string): Promise<void>;
+    decrementarStock(productoId: string, cantidad: number): Promise<boolean>;
 }

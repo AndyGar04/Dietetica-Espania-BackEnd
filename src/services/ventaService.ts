@@ -13,49 +13,23 @@ export class VentaService {
         idVenta: string,
         itemsData: { productoId: string; cantidad: number }[]
     ): Promise<Venta> {
-
         const nuevaVenta = new Venta(idVenta);
 
         for (const item of itemsData) {
-
             const producto = await this.productoRepo.findById(item.productoId);
-
             if (!producto) {
-                throw new Error(
-                    `El producto con ID ${item.productoId} no existe.`
-                );
+                throw new Error(`El producto con ID ${item.productoId} no existe.`);
             }
 
-            const stockActual =
-                typeof (producto as any).getCantidad === "function"
-                    ? (producto as any).getCantidad()
-                    : (producto as any).cantidad;
-
-  
-            if (item.cantidad > stockActual) {
-                throw new Error(
-                    `Stock insuficiente para ${producto.getNombre()} (Disponible: ${stockActual})`
-                );
+            const exito = await this.productoRepo.decrementarStock(item.productoId, item.cantidad);
+            if (!exito) {
+                throw new Error(`Stock insuficiente para ${producto.getNombre()}.`);
             }
 
-
-            const nuevoStock = stockActual - item.cantidad;
-
-            if (typeof (producto as any).setCantidad === "function") {
-                (producto as any).setCantidad(nuevoStock);
-            } else {
-                (producto as any).cantidad = nuevoStock;
-            }
-
-            await this.productoRepo.update(producto);
-
-            // agregar item a la venta
-            const nuevoItem = new ItemVenta(producto, item.cantidad);
-            nuevaVenta.agregarItem(nuevoItem);
+            nuevaVenta.agregarItem(new ItemVenta(producto, item.cantidad));
         }
 
         await this.ventaRepo.save(nuevaVenta);
-
         return nuevaVenta;
     }
 

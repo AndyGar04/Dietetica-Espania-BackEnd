@@ -81,6 +81,14 @@ export class SqliteProductoRepository implements IProductoRepository {
     await this.db.execute({ sql: 'DELETE FROM productos WHERE id = ?', args: [id] });
   }
 
+  public async decrementarStock(productoId: string, cantidad: number): Promise<boolean> {
+    const result = await this.db.execute({
+      sql: 'UPDATE productos SET cantidad = cantidad - ? WHERE id = ? AND cantidad >= ?',
+      args: [cantidad, productoId, cantidad]
+    });
+    return (result.rowsAffected ?? 0) > 0;
+  }
+
   private mapearInstancia(row: any): Producto {
     const provTemp = new Proveedor(String(row.proveedorId || ""), "Proveedor Asociado", "", "");
     let producto: any;
