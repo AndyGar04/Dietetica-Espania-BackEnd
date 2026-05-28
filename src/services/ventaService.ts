@@ -3,30 +3,33 @@ import { ItemVenta } from "../models/producto-venta";
 import { IVentaRepository } from "../models/repository/IVentaRepository";
 import { IProductoRepository } from "../models/repository/IProductoRepository";
 
+export interface ItemVentaInput {
+    productoId: string;
+    cantidad: number;
+    descuento?: number;
+}
+
+export interface ProcesarVentaInput {
+    items: ItemVentaInput[];
+    metodoPago: string;
+}
+
 export class VentaService {
     constructor(
         private ventaRepo: IVentaRepository,
         private productoRepo: IProductoRepository
     ) {}
 
-    public async procesarVenta(
-        idVenta: string,
-        itemsData: { productoId: string; cantidad: number }[]
-    ): Promise<Venta> {
-        const nuevaVenta = new Venta(idVenta);
+    public async procesarVenta(input: ProcesarVentaInput): Promise<Venta> {
+        const nuevaVenta = new Venta(undefined, undefined, input.metodoPago);
 
-        for (const item of itemsData) {
-            const producto = await this.productoRepo.findById(item.productoId);
+        for (const itemData of input.items) {
+            const producto = await this.productoRepo.findById(itemData.productoId);
             if (!producto) {
-                throw new Error(`El producto con ID ${item.productoId} no existe.`);
+                throw new Error(`El producto con ID ${itemData.productoId} no existe.`);
             }
-
-            const exito = await this.productoRepo.decrementarStock(item.productoId, item.cantidad);
-            if (!exito) {
-                throw new Error(`Stock insuficiente para ${producto.getNombre()}.`);
-            }
-
-            nuevaVenta.agregarItem(new ItemVenta(producto, item.cantidad));
+            const item = ItemVenta.fromProducto(producto, itemData.cantidad, itemData.descuento ?? 0);
+            nuevaVenta.agregarItem(item);
         }
 
         await this.ventaRepo.save(nuevaVenta);

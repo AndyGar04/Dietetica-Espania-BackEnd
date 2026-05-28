@@ -45,7 +45,7 @@ async function main(): Promise<void> {
   const repoProv = new SqliteProveedorRepository(db);
   const repoCat = new SqliteCategoriaRepository(db);
   const repoProd = new SqliteProductoRepository(db);
-  const repoVenta = new SqliteVentaRepository(db, repoProd);
+  const repoVenta = new SqliteVentaRepository(db);
 
   const serviceProv = new ProveedorService(repoProv); 
   const serviceCat = new CategoriaService(repoCat);

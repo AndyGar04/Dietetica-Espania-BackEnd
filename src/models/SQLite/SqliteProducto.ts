@@ -91,19 +91,35 @@ export class SqliteProductoRepository implements IProductoRepository {
 
   private mapearInstancia(row: any): Producto {
     const provTemp = new Proveedor(String(row.proveedorId || ""), "Proveedor Asociado", "", "");
-    let producto: any;
+    const precioCompra = Number(row.precioCompra ?? 0);
+    let producto: Producto;
 
     if (String(row.tipo) === "suelto") {
-      producto = new ProductoSuelto(String(row.id), provTemp, String(row.nombre), Boolean(Number(row.oferta)), Number(row.cantidad), Number(row.precioVenta));
+      producto = new ProductoSuelto(
+        String(row.id),
+        provTemp,
+        String(row.nombre),
+        Boolean(Number(row.oferta)),
+        Number(row.cantidad),
+        Number(row.precioVenta),
+        precioCompra
+      );
     } else {
-      producto = new ProductoEnvasado(String(row.id), provTemp, String(row.nombre), Boolean(Number(row.oferta)), Number(row.precioVenta), Number(row.cantidad));
+      producto = new ProductoEnvasado(
+        String(row.id),
+        provTemp,
+        String(row.nombre),
+        Boolean(Number(row.oferta)),
+        Number(row.precioVenta),
+        Number(row.cantidad),
+        precioCompra
+      );
     }
 
-    producto.precioCompra = Number(row.precioCompra || 0);
-    producto.precioVenta = Number(row.precioVenta || 0);
-    producto.categoria = String(row.categoria || "");
-    producto.proveedorId = String(row.proveedorId || "");
-    producto.tipo = String(row.tipo || "envasado");
+    (producto as any).precioVenta = Number(row.precioVenta ?? 0);
+    (producto as any).categoria = String(row.categoria || "");
+    (producto as any).proveedorId = String(row.proveedorId || "");
+    (producto as any).tipo = String(row.tipo || "envasado");
 
     return producto;
   }

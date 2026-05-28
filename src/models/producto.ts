@@ -10,7 +10,8 @@ export abstract class Producto {
         public proveedor: Proveedor,
         public nombre: string,
         public oferta: boolean,
-        public cantidad: number
+        public cantidad: number,
+        public precioCompra: number = 0
     ) {}
 
     public abstract calcularPrecio(cantidad: number): number;
@@ -38,7 +39,15 @@ export abstract class Producto {
     public setCantidad(cantidad: number): void {
         this.cantidad = cantidad;
     }
-    
+
+    public getPrecioCompra(): number {
+        return this.precioCompra;
+    }
+
+    public setPrecioCompra(precio: number): void {
+        this.precioCompra = precio;
+    }
+
     public getCategoria(): Categoria | null {
         return this.categoria;
     }

@@ -9,10 +9,11 @@ export class ProductoEnvasado extends Producto {
         nombre: string,
         oferta: boolean,
         public precioUnitario: number,
-        cantidad: number
+        cantidad: number,
+        precioCompra: number = 0
     ) {
         super(
-            id, proveedor, nombre, oferta, cantidad
+            id, proveedor, nombre, oferta, cantidad, precioCompra
         );
     }
 

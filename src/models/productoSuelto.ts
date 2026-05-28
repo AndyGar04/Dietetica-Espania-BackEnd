@@ -8,20 +8,21 @@ export class ProductoSuelto extends Producto {
         nombre: string,
         oferta: boolean,
         cantidad: number,
-        private precioPorGramo: number
+        private precioPorGramo: number,
+        precioCompra: number = 0
     ) {
-        super(id, proveedor, nombre, oferta, cantidad); 
+        super(id, proveedor, nombre, oferta, cantidad, precioCompra);
     }
 
     public override calcularPrecio(gramos: number): number {
         return gramos * this.precioPorGramo;
     }
 
-    public getPrecioPorGramo(): number { 
-        return this.precioPorGramo; 
+    public getPrecioPorGramo(): number {
+        return this.precioPorGramo;
     }
 
-    public setPrecioPorGramo(precio: number): void { 
-        this.precioPorGramo = precio; 
+    public setPrecioPorGramo(precio: number): void {
+        this.precioPorGramo = precio;
     }
 }

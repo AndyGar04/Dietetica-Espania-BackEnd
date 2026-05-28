@@ -1,51 +1,58 @@
 import { Producto } from "./producto";
 
 export class ItemVenta {
-    private precioUnitario: number;
-    private subtotal: number;
+    private readonly subtotal: number;
 
-    constructor(
-        private producto: Producto,
-        private cantidad: number
+    private constructor(
+        private readonly productoId: string,
+        private readonly nombre: string,
+        private readonly cantidad: number,
+        private readonly precioUnitario: number,
+        private readonly precioCompraUnitario: number,
+        private readonly descuento: number
     ) {
-        this.precioUnitario = producto.calcularPrecio(1);
-        this.subtotal = producto.calcularPrecio(cantidad);
+        this.subtotal = ItemVenta.calcularSubtotal(cantidad, precioUnitario, descuento);
+    }
+
+    public static fromProducto(
+        producto: Producto,
+        cantidad: number,
+        descuento: number = 0
+    ): ItemVenta {
+        const precioUnitario = producto.calcularPrecio(1);
+        return new ItemVenta(
+            producto.getId(),
+            producto.getNombre(),
+            cantidad,
+            precioUnitario,
+            producto.precioCompra,
+            descuento
+        );
     }
 
     public static fromHistorico(
-        producto: Producto,
+        productoId: string,
+        nombre: string,
         cantidad: number,
         precioUnitario: number,
+        precioCompraUnitario: number,
+        descuento: number,
         subtotal: number
     ): ItemVenta {
-        const item = new ItemVenta(producto, cantidad);
-        item.precioUnitario = precioUnitario;
-        item.subtotal = subtotal;
+        const item = new ItemVenta(productoId, nombre, cantidad, precioUnitario, precioCompraUnitario, descuento);
+        (item as any).subtotal = subtotal;
         return item;
     }
 
-    public getSubtotal(): number {
-        return this.subtotal;
+    private static calcularSubtotal(cantidad: number, precioUnitario: number, descuento: number): number {
+        return cantidad * precioUnitario * (1 - descuento / 100);
     }
 
-    public getPrecioUnitario(): number {
-        return this.precioUnitario;
-    }
-
-    // Getters y Setters
-    public getProducto(): Producto {
-        return this.producto;
-    }
-
-    public setProducto(p: Producto): void {
-        this.producto = p;
-    }
-
-    public getCantidad(): number {
-        return this.cantidad;
-    }
-
-    public setCantidad(c: number): void {
-        this.cantidad = c;
-    }
+    public getProductoId(): string { return this.productoId; }
+    public getNombre(): string { return this.nombre; }
+    public getCantidad(): number { return this.cantidad; }
+    public getPrecioUnitario(): number { return this.precioUnitario; }
+    public getPrecioCompraUnitario(): number { return this.precioCompraUnitario; }
+    public getDescuento(): number { return this.descuento; }
+    public getSubtotal(): number { return this.subtotal; }
 }
