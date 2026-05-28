@@ -14,3 +14,16 @@ export const registrarVentaSchema = z.object({
 });
 
 export type RegistrarVentaInput = z.infer<typeof registrarVentaSchema>;
+
+export const listarVentasQuerySchema = z.object({
+  desde: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'desde debe tener formato YYYY-MM-DD')
+    .optional(),
+  hasta: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'hasta debe tener formato YYYY-MM-DD')
+    .optional(),
+});
+
+export type ListarVentasQuery = z.infer<typeof listarVentasQuerySchema>;

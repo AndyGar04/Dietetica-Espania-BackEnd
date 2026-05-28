@@ -84,4 +84,65 @@ export class SqliteVentaRepository implements IVentaRepository {
         const ventas = await Promise.all(result.rows.map(row => this.findById(String(row['id']))));
         return ventas.filter((v): v is Venta => v !== null);
     }
+
+    public async findByDateRange(desdeISO?: string, hastaExclusivoISO?: string): Promise<Venta[]> {
+        const where: string[] = [];
+        const args: (string | number)[] = [];
+
+        if (desdeISO) {
+            where.push('fecha >= ?');
+            args.push(desdeISO);
+        }
+        if (hastaExclusivoISO) {
+            where.push('fecha < ?');
+            args.push(hastaExclusivoISO);
+        }
+
+        const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+        const ventasResult = await this.db.execute({
+            sql: `SELECT * FROM ventas ${whereSql} ORDER BY fecha DESC`,
+            args,
+        });
+
+        if (ventasResult.rows.length === 0) return [];
+
+        const ventasPorId = new Map<string, Venta>();
+        const orden: string[] = [];
+        for (const row of ventasResult.rows) {
+            const id = String(row['id']);
+            orden.push(id);
+            ventasPorId.set(
+                id,
+                new Venta(
+                    id,
+                    new Date(String(row['fecha'])),
+                    String(row['metodoPago'] ?? 'efectivo')
+                )
+            );
+        }
+
+        const placeholders = orden.map(() => '?').join(',');
+        const itemsResult = await this.db.execute({
+            sql: `SELECT * FROM venta_items WHERE ventaId IN (${placeholders})`,
+            args: orden,
+        });
+
+        for (const row of itemsResult.rows) {
+            const ventaId = String(row['ventaId']);
+            const venta = ventasPorId.get(ventaId);
+            if (!venta) continue;
+            const item = ItemVenta.fromHistorico(
+                String(row['productoId']),
+                String(row['nombre'] ?? ''),
+                Number(row['cantidad']),
+                Number(row['precioUnitario']),
+                Number(row['precioCompraUnitario'] ?? 0),
+                Number(row['descuento'] ?? 0),
+                Number(row['subtotal'])
+            );
+            venta.agregarItem(item);
+        }
+
+        return orden.map(id => ventasPorId.get(id)!).filter(Boolean);
+    }
 }

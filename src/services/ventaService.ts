@@ -42,4 +42,23 @@ export class VentaService {
 
         return `Venta: ${venta.getId()} | Fecha: ${venta.getFecha().toLocaleDateString()} | Total: $${venta.getTotalVenta()}`;
     }
+
+    public async obtenerVentas(input: { desde?: string | undefined; hasta?: string | undefined }): Promise<Venta[]> {
+        const { desde, hasta } = input;
+
+        if (desde && hasta && desde > hasta) {
+            throw new Error('Rango de fechas inválido: desde no puede ser mayor que hasta.');
+        }
+
+        const desdeISO = desde ? `${desde}T00:00:00.000Z` : undefined;
+
+        let hastaExclusivoISO: string | undefined;
+        if (hasta) {
+            const d = new Date(`${hasta}T00:00:00.000Z`);
+            d.setUTCDate(d.getUTCDate() + 1);
+            hastaExclusivoISO = d.toISOString();
+        }
+
+        return this.ventaRepo.findByDateRange(desdeISO, hastaExclusivoISO);
+    }
 }
