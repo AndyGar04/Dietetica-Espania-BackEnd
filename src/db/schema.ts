@@ -23,23 +23,24 @@ export async function initSchema(): Promise<void> {
   )`);
 
   await db.execute(`CREATE TABLE IF NOT EXISTS productos (
-    id TEXT PRIMARY KEY,
-    nombre TEXT NOT NULL,
-    tipo TEXT DEFAULT 'envasado',
-    precioCompra REAL DEFAULT 0,
-    precioVenta REAL DEFAULT 0,
-    cantidad INTEGER DEFAULT 0,
-    oferta INTEGER DEFAULT 0,
-    categoria TEXT DEFAULT '',
-    proveedorId TEXT DEFAULT ''
-  )`);
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  tipo TEXT DEFAULT 'envasado',
+  precioCompra REAL DEFAULT 0,
+  precioVenta REAL DEFAULT 0,
+  cantidad INTEGER DEFAULT 0,
+  oferta INTEGER DEFAULT 0,
+  categoria TEXT DEFAULT '',
+  proveedorId TEXT DEFAULT '',
+  fechaVencimiento TEXT DEFAULT NULL
+)`);
 
-  await db.execute(`CREATE TABLE IF NOT EXISTS ventas (
-    id TEXT PRIMARY KEY,
-    fecha TEXT NOT NULL,
-    total REAL NOT NULL DEFAULT 0,
-    metodoPago TEXT NOT NULL DEFAULT 'efectivo'
-  )`);
+try {
+  await db.execute(`
+    ALTER TABLE productos
+    ADD COLUMN fechaVencimiento TEXT DEFAULT NULL
+  `);
+} catch (error) {}
 
   await db.execute(`CREATE TABLE IF NOT EXISTS venta_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

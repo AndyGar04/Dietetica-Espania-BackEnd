@@ -4,6 +4,10 @@ import { Categoria } from "./categoria";
 export abstract class Producto {
 
     public categoria: Categoria | null = null;
+    public fechaVencimiento: Date | null = null;
+
+    // 🔥 IMPORTANTE: agregado para unificar frontend/backend
+    public precioVenta: number = 0;
 
     constructor(
         public id: string,
@@ -11,8 +15,13 @@ export abstract class Producto {
         public nombre: string,
         public oferta: boolean,
         public cantidad: number,
-        public precioCompra: number = 0
-    ) {}
+        public precioCompra: number = 0,
+        fechaVencimiento: Date | null = null,
+        precioVenta: number = 0
+    ) {
+        this.fechaVencimiento = fechaVencimiento;
+        this.precioVenta = precioVenta;
+    }
 
     public abstract calcularPrecio(cantidad: number): number;
 
@@ -54,5 +63,14 @@ export abstract class Producto {
 
     public setCategoria(categoria: Categoria | null): void {
         this.categoria = categoria;
+    }
+
+  
+    public setPrecioVenta(precio: number): void {
+        this.precioVenta = precio;
+    }
+
+    public getPrecioVenta(): number {
+        return this.precioVenta;
     }
 }

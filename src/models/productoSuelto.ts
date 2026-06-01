@@ -2,6 +2,7 @@ import { Producto } from "./producto";
 import { Proveedor } from "./proveedor";
 
 export class ProductoSuelto extends Producto {
+
     constructor(
         id: string,
         proveedor: Proveedor,
@@ -9,9 +10,17 @@ export class ProductoSuelto extends Producto {
         oferta: boolean,
         cantidad: number,
         private precioPorGramo: number,
-        precioCompra: number = 0
+        precioCompra: number = 0,
+        public fechaVencimiento: Date | null = null
     ) {
-        super(id, proveedor, nombre, oferta, cantidad, precioCompra);
+        super(
+            id,
+            proveedor,
+            nombre,
+            oferta,
+            cantidad,
+            precioCompra
+        );
     }
 
     public override calcularPrecio(gramos: number): number {

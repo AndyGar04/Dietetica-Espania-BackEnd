@@ -3,23 +3,32 @@ import { Proveedor } from "./proveedor";
 
 export class ProductoEnvasado extends Producto {
 
+    public precioUnitario: number = 0;
+
     constructor(
         id: string,
         proveedor: Proveedor,
         nombre: string,
         oferta: boolean,
-        public precioUnitario: number,
+        precioVenta: number,
         cantidad: number,
-        precioCompra: number = 0
+        precioCompra: number,
+        public fechaVencimiento: Date | null = null
     ) {
         super(
-            id, proveedor, nombre, oferta, cantidad, precioCompra
+            id,
+            proveedor,
+            nombre,
+            oferta,
+            cantidad,
+            precioCompra
         );
+
+        // 🔥 IMPORTANTE: asignar precioVenta correctamente
+        this.precioUnitario = precioVenta;
     }
 
-    public override calcularPrecio(
-        unidades: number
-    ): number {
+    public override calcularPrecio(unidades: number): number {
         return unidades * this.precioUnitario;
     }
 
@@ -27,9 +36,7 @@ export class ProductoEnvasado extends Producto {
         return this.precioUnitario;
     }
 
-    public setPrecioUnitario(
-        precio: number
-    ): void {
+    public setPrecioUnitario(precio: number): void {
         this.precioUnitario = precio;
     }
 }

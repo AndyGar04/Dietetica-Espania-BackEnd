@@ -6,7 +6,20 @@ export class ProductoController {
 
   public registrarEnvasado = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id, nombre, precioCompra, precioVenta, precioUnitario, cantidad, categoria, categoriaId, proveedorId, oferta } = req.body;
+   const {
+  id,
+  nombre,
+  precioCompra,
+  precioVenta,
+  precioUnitario,
+  cantidad,
+  categoria,
+  categoriaId,
+  proveedorId,
+  proveedorNombre,
+  oferta,
+  fechaVencimiento
+} = req.body;
 
       const precioFinal = Number(precioVenta || precioUnitario || 0);
       const catId = String(categoriaId || categoria || "");
@@ -14,18 +27,19 @@ export class ProductoController {
       if (!nombre || precioFinal <= 0 || !proveedorId || !catId) {
         return res.status(400).json({ error: "Faltan campos obligatorios para el producto envasado." });
       }
-
-      await this.productoService.crearProductoEnvasado(
-        id || crypto.randomUUID(),
-        String(proveedorId),
-        nombre.trim(),
-        precioFinal,
-        Number(cantidad || 0),
-        Boolean(oferta),
-        Number(precioCompra || 0),
-        catId,
-        ""
-      );
+    console.log("FECHA RECIBIDA:", fechaVencimiento);
+await this.productoService.crearProductoEnvasado(
+  id || crypto.randomUUID(),
+  String(proveedorId),
+  nombre.trim(),
+  precioFinal,
+  Number(cantidad || 0),
+  Boolean(oferta),
+  Number(precioCompra || 0),
+  catId,
+  String(proveedorNombre || ""),
+  fechaVencimiento || null
+);
 
       return res.status(201).json({ message: "Producto envasado creado con éxito" });
     } catch (error: any) {
@@ -36,7 +50,20 @@ export class ProductoController {
 
   public registrarSuelto = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id, nombre, precioCompra, precioVenta, precioPorGramo, cantidad, categoria, categoriaId, proveedorId, oferta } = req.body;
+     const {
+  id,
+  nombre,
+  precioCompra,
+  precioVenta,
+  precioPorGramo,
+  cantidad,
+  categoria,
+  categoriaId,
+  proveedorId,
+  proveedorNombre,
+  oferta,
+  fechaVencimiento
+} = req.body;
 
       const precioFinal = Number(precioVenta || precioPorGramo || 0);
       const catId = String(categoriaId || categoria || "");
@@ -54,7 +81,8 @@ export class ProductoController {
         Number(cantidad || 0),
         Number(precioCompra || 0),
         catId,
-        ""
+        String(proveedorNombre || ""),
+        fechaVencimiento || null
       );
 
       return res.status(201).json({ message: "Producto suelto creado con éxito" });
@@ -76,7 +104,17 @@ export class ProductoController {
   public actualizar = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      const { nombre, precioCompra, precioVenta, cantidad, categoria, categoriaId, proveedorId, oferta } = req.body;
+     const {
+  nombre,
+  precioCompra,
+  precioVenta,
+  cantidad,
+  categoria,
+  categoriaId,
+  proveedorId,
+  oferta,
+  fechaVencimiento
+} = req.body;
       
       if (!id || Array.isArray(id)) {
         return res.status(400).json({ error: "ID de producto requerido o inválido" });
@@ -84,15 +122,16 @@ export class ProductoController {
 
       const catId = String(categoriaId || categoria || "");
 
-      await this.productoService.actualizarProducto(id, {
-        nombre: nombre || "",
-        precioCompra: Number(precioCompra || 0),
-        precioVenta: Number(precioVenta || 0),
-        cantidad: Number(cantidad || 0),
-        proveedorId: String(proveedorId || ""),
-        categoria: String(categoriaId || ""),
-        oferta: Boolean(oferta)
-      });
+    await this.productoService.actualizarProducto(id, {
+  nombre: nombre || "",
+  precioCompra: Number(precioCompra || 0),
+  precioVenta: Number(precioVenta || 0),
+  cantidad: Number(cantidad || 0),
+  proveedorId: String(proveedorId || ""),
+  categoria: String(categoriaId || ""),
+  oferta: Boolean(oferta),
+  fechaVencimiento: fechaVencimiento || null
+});
 
       return res.json({ message: "Producto actualizado con éxito" });
     } catch (error: any) {
