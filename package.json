@@ -13,7 +13,8 @@
         "test:ui": "vitest --ui",
         "test:unit": "vitest run --exclude \"**/sqlite*.test.ts\"",
         "test:integration": "vitest run \"**/sqlite*.test.ts\"",
-        "seed": "tsx src/db/seed.ts"
+        "seed": "tsx src/db/seed.ts",
+        "import:productos": "tsx src/db/importProductos.ts"
     },
     "keywords": [],
     "author": "",
